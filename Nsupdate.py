@@ -14,28 +14,26 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 from urllib.parse import urlparse, unquote
 from PIL import Image, ImageTk, ImageSequence
 
-# --- FIX ICON TASKBAR (PHẦN 1): Đặt ID App trước khi tạo bất kỳ cửa sổ nào ---
-# Việc đặt ID này giúp Windows nhóm các cửa sổ của app vào một icon trên Taskbar
+# --- SET APP ID FOR TASKBAR ICON ---
 try:
-    myappid = 'tsufu.switch.update.manager.pro.v101' # Đổi ID nhẹ để refresh cache icon của Windows
+    myappid = 'tsufu.switch.update.manager.pro.v103'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 except: 
     pass
 
-# --- HÀM QUAN TRỌNG: TÌM ĐƯỜNG DẪN TÀI NGUYÊN ---
 def resource_path(relative_path):
-    """ Lấy đường dẫn tuyệt đối tới tài nguyên, dùng cho cả Dev và PyInstaller """
+    """ Get absolute path to resource for PyInstaller """
     try:
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-# --- CẤU HÌNH PHẦN MỀM & UPDATE ---
-APP_VERSION = "1.0.1" 
+# --- CONFIG ---
+APP_VERSION = "1.0.3"
 GITHUB_REPO = "tsufuwu/ns_tsufupdate_manager" 
 
-# --- CẤU HÌNH MÀU SẮC ---
+# --- COLORS ---
 COLOR_BG = "#1e1e1e"
 COLOR_CARD = "#2d2d30"
 COLOR_HEADER_BG = "#3e3e42"
@@ -49,19 +47,21 @@ COLOR_INFO = "#17a2b8"
 COLOR_SPEED_BG = "#FF6600"    
 COLOR_SPEED_HOVER = "#FF8533" 
 COLOR_SPEED_PRESS = "#CC5200"
+COLOR_DANGER = "#dc3545" 
+COLOR_DANGER_HOVER = "#bd2130"
 
 FONT_HEADER = ("Segoe UI", 13, "bold")
 FONT_TITLE = ("Segoe UI", 11, "bold")
 FONT_NORMAL = ("Segoe UI", 10)
 FONT_SMALL = ("Segoe UI", 9)
 
-# --- TỪ ĐIỂN UI ---
+# --- UI DICTIONARY (RESTORED FULL DETAIL) ---
 UI_TEXT = {
     "VI": {
         "title": "SWITCH TSUFUPDATE MANAGER",
         "credit": "Dev by Tsufu/Phú Trần Trung Lê",
         "credit2": "Chân thành cảm ơn Group Cộng Đồng Nintendo Switch hắc ám (Admin Phong Pham)\nvì các dữ liệu cung cấp cho phần mềm này",
-        "path_label": "Chọn thư mục điểm đến: (không hỗ trợ DBI)",
+        "path_label": "Chọn thư mục điểm đến (Không hỗ trợ DBI (MTP)):",
         "path_tip": "Nên là thẻ nhớ (Root) nếu bạn muốn xài tính năng cập nhật tự động.\nHoặc chọn thư mục bất kì để tải file vào đó rồi chép vào thẻ nhớ sau.\n Đọc HDSD để biết cách kết nối với thẻ nhớ root",
         "btn_browse": "📁 Chọn",
         "btn_detect": "🔄 Auto",
@@ -72,7 +72,7 @@ UI_TEXT = {
         "btn_guide": "📖 Hướng dẫn sử dụng",
         "status_ready": "Sẵn sàng",
         "status_detect_ok": "Đã phát hiện thẻ nhớ/USB tại: ",
-        "status_detect_fail": "Không tìm thấy ổ đĩa rời. Vui lòng chọn thủ công.",
+        "status_detect_fail": "Không tìm thấy ổ đĩa rời phù hợp (Switch/SD/USB).",
         "msg_confirm_dl_all": "Bạn có muốn tự động tải tất cả ứng dụng trong mục:\n'{category}' không?\n\n(Lưu ý: Sẽ bỏ qua các file dành cho PC và cần hai bước như Sigpatch, Linkalho)",
         "msg_mtp_warning": "⚠️ LƯU Ý MTP RESPONDER (DBI):\nViệc dùng MTP Responder qua DBI chỉ có tác dụng khi tải sysmod, homebrew, cheat, save...\n\nKHÔNG NÊN áp dụng cho File Hack (Atmosphere, Hekate...) vì sẽ dễ gây ra lỗi file hệ thống.\nChi tiết vui lòng đọc Hướng Dẫn Sử Dụng.",
         "cat_file": "🔥 FILE HACK & CÔNG CỤ PC",
@@ -84,27 +84,36 @@ UI_TEXT = {
         "cat_game_source": "👾 NGUỒN DOWNLOAD GAME",
         "msg_fw_done": "Đã chép file Firmware thành công vào thẻ nhớ, nhưng chưa xong, bạn cần xem hướng dẫn update Firmware ở nút bên cạnh để hoàn thành. Nhớ cập nhật gói my pack ở đầu phần mềm",
         "ams_195_title": "Cảnh báo tương thích Atmosphere 1.9.5",
-        "ams_195_msg": """Phiên bản Atmosphere này tương thích với hầu hết các ứng dụng, tuy nhiên chỉ hỗ trợ CFW và  OFW có firmware dưới 21.0.0.
+        "ams_195_msg": """⚠️ CẢNH BÁO QUAN TRỌNG VỀ FIRMWARE & HẠ CẤP
 
-Trường hợp OFW ≥ 21.0.0:
-Nếu OFW đã cập nhật lên 21.0.0 hoặc cao hơn, bạn bắt buộc phải sử dụng Atmosphere mới nhất.
-Một số ứng dụng sẽ không thể sử dụng, do gần như không thể hạ cấp OFW trong trường hợp này.
+Phiên bản này tương thích tốt nhất với Tinfoil/App cũ, NHƯNG chỉ hỗ trợ Firmware < 21.0.0.
+Nếu chỉ có Custom Firmware (CFW) của bạn cập nhật lên 21.0.0 thì có thể xem xét hạ cấp firmware, còn nếu bạn đã nâng cấp cả OFW lên 21.0.0 đổ lên thì buộc dùng AMS mới nhất trong gói my pack
+🔴 LƯU Ý NẾU BẠN MUỐN HẠ CẤP (DOWNGRADE) CFW :
+1. Nếu chỉ có EmuNAND (CFW) lỡ lên cao: Có thể dùng Daybreak để hạ cấp (tương tự nâng cấp).
+2. CẢNH BÁO FW 21.x: Nếu đang ở FW 21, KHUYẾN NGHỊ NẾU BẠN KHÔNG CHẮC CHẮN THÌ KHÔNG NÊN HẠ, HOẶC ĐẢM BẢO ĐÃ BACK UP THẺ NHỚ. Đã có nhiều trường hợp hạ từ 21 về 20 hoặc 20 về 19 bị Semi-Brick (lỗi 2002-3005).
+3. CÁCH CỨU NẾU BỊ BRICK KHI HẠ CẤP:
+   - Khởi động vào chế độ Maintenance của EmuNAND.
+   - Chọn dòng 2: "Initialize Console" để khôi phục lại hệ điều hành (HOS).
+   (Nên Backup dữ liệu trước khi thực hiện).
 
-Trường hợp chỉ CFW (emuNAND) ≥ 21.0.0:
-Nếu chỉ CFW/emuNAND lỡ cập nhật lên 21.0.0, bạn có thể thử hạ firmware, thao tác tương tự như khi nâng firmware CFW.
-Bắt buộc sao lưu toàn bộ dữ liệu trong thẻ nhớ trước khi thực hiện (xem hướng dẫn Backup) để tránh mất dữ liệu.
-
-Khắc phục lỗi brick (nếu xảy ra):
-Trong trường hợp gặp lỗi 2002-3005 (0x177a02) dẫn đến máy không khởi động được:
-1. Khởi động vào Maintenance Mode của emuNAND.
-2. Chọn mục "Initialize Console" để khôi phục lại HOS.""",
-        "btn_maintenance_guide": "📖 Hướng dẫn Maintenance Mode"
+👉 Bấm nút "Hướng dẫn Maintenance Mode" bên dưới để xem cách vào chế độ này.""", 
+        # ---------------------------
+        "btn_maintenance_guide": "📖 Hướng dẫn Maintenance Mode",
+        "chk_mtp_label": "Chọn vào đây nếu bạn dùng DBI (MTP)",
+        "msg_mtp_alert": "Lưu ý: Chỉ dùng chế độ này để tải sysmod, homebrew, file save, cheat... và các thứ phụ.\nKHÔNG dùng để fix lỗi hệ thống hay cài gói hack (Atmosphere/Hekate)!\n\nSau khi bấm OK, hãy chọn một nơi để lưu tạm file trên máy tính, hệ thống sẽ tải các file bạn chọn vào đó,\nkhi xong bạn hãy copy paste tất cả folder vừa tải vào ổ MTP -> SD Card.",
+        "btn_hard_reset": "☢️ CHẠY RESET",
+        "tip_hard_reset": "Chọn option này khi bạn đã thử nhiều cách fix mềm bên dưới vẫn không thể khắc phục, khi đó phần mềm sẽ xóa sạch thẻ nhớ, chỉ giữ lại thư mục chứa hệ điều hành (emuMMC) và tự động cài lại mới gói hack My Pack, tất cả mọi thứ như gói hack, sysmodule, homebrew, việt hóa, mod,... sẽ biến mất. Hãy back up nếu cần",
+        "msg_update_virus": "Nếu cập nhật thất bại, hãy thử tắt phần mềm diệt Virus và thử lại.",
+        "msg_update_manual": "Nếu phần mềm không tự khởi động lại, vui lòng mở lại file thủ công.",
+        "btn_cancel": "❌ Hủy Tải (Cancel)",
+        "msg_dl_success": "Đã tải thành công: ",
+        "msg_cancelled": "Đã hủy tác vụ tải xuống và xóa file tạm."
     },
     "EN": {
         "title": "SWITCH TSUFUPDATE MANAGER",
         "credit": "Dev by Tsufu/Phu Tran Trung Le",
         "credit2": "Special thanks to Nintendo Switch Hacking Community Group (Admin Phong Pham)\nfor providing data for this software",
-        "path_label": "Select destination folder:",
+        "path_label": "Select destination folder (DBI MTP not supported):",
         "path_tip": "Should be SD Card (Root) for auto-update features.\nOr select any folder to download files there and copy manually later.",
         "btn_browse": "📁 Browse",
         "btn_detect": "🔄 Auto Detect",
@@ -115,7 +124,7 @@ Trong trường hợp gặp lỗi 2002-3005 (0x177a02) dẫn đến máy không 
         "btn_guide": "📖 User Manual",
         "status_ready": "Ready",
         "status_detect_ok": "Detected SD Card/USB at: ",
-        "status_detect_fail": "Removable drive not found. Please select manually.",
+        "status_detect_fail": "Removable drive not found.",
         "msg_confirm_dl_all": "Do you want to automatically download all apps in:\n'{category}'?\n\n(Note: PC files will be skipped)",
         "msg_mtp_warning": "⚠️ MTP RESPONDER WARNING (DBI):\nUsing MTP Responder via DBI is okay for sysmods, homebrew, cheats, saves...\n\nDO NOT use it for Hack Files (Atmosphere, Hekate...) as it may cause system file errors.\nPlease read the User Manual for details.",
         "cat_file": "🔥 HACK FILES & PC TOOLS",
@@ -127,552 +136,105 @@ Trong trường hợp gặp lỗi 2002-3005 (0x177a02) dẫn đến máy không 
         "cat_game_source": "👾 GAME DOWNLOAD SOURCES",
         "msg_fw_done": "Firmware files copied successfully to SD card. You need to use Daybreak to apply the update. Remember to update My Pack first.",
         "ams_195_title": "Atmosphere 1.9.5 Compatibility Warning",
-        "ams_195_msg": """This Atmosphere version is compatible with most apps, but only supports CFW and OFW with firmware below 21.0.0.
-
-Case OFW ≥ 21.0.0:
-If OFW is updated to 21.0.0+, you MUST use the latest Atmosphere.
-Some apps may not work, as downgrading OFW is nearly impossible.
-
-Case CFW (emuNAND) ≥ 21.0.0:
-If only CFW/emuNAND is updated to 21.0.0+, you can try downgrading firmware (same steps as upgrading).
-MUST Backup SD card data before proceeding to avoid data loss.
-
-Fix Brick (if happens):
-If you encounter error 2002-3005 (0x177a02) causing boot failure:
-1. Boot into emuNAND Maintenance Mode.
-2. Select "Initialize Console" to restore HOS.""",
-        "btn_maintenance_guide": "📖 Maintenance Mode Guide"
+        "ams_195_msg": """This Atmosphere version is compatible with most apps...""",
+        "btn_maintenance_guide": "📖 Maintenance Mode Guide",
+        "chk_mtp_label": "Check here if using DBI (MTP)",
+        "msg_mtp_alert": "Note: Only use this for sysmods, homebrew, saves, cheats...\nDO NOT use for System Fixes or Core Hack (Atmosphere/Hekate)!\n\nAfter clicking OK, please select a temporary folder. The system will download files there.\nOnce done, you must copy/paste them to MTP -> SD Card manually.",
+        "btn_hard_reset": "☢️ HARD RESET",
+        "tip_hard_reset": "Choose this option when soft fixes fail. The software will wipe the SD card, keeping only the OS folder (emuMMC), and reinstall My Pack. All hacks, sysmodules, homebrew, mods will be lost. Backup if needed.",
+        "msg_update_virus": "If update fails, please try disabling Anti-Virus and try again.",
+        "msg_update_manual": "If the app does not restart automatically, please open the file manually.",
+        "btn_cancel": "❌ Cancel Download",
+        "msg_dl_success": "Download Success: ",
+        "msg_cancelled": "Download task cancelled."
     }
 }
 
+# --- DATA WITH FULL DESCRIPTIONS ---
 DATA_VI = {
     "🔥 FILE HACK & CÔNG CỤ PC": [
-        {
-            "name": "Gói hack tổng hợp My Pack", 
-            "desc": "Bộ công cụ hack Switch được tùy chỉnh riêng (AIO). Bao gồm Atmosphere, Hekate và các sysmod cần thiết nhất để chạy ngay lập tức.",
-            "urls": {
-                "Bước 1. Tải về file": "https://rebrand.ly/mypack",
-                "Bước 2. Chọn file nén để tự động chép.": "ACTION_PICK_ZIP"
-            }
-        }, 
-        {
-            "name": "Sigpatches (Hỗ trợ game thuốc)", 
-            "desc": "Signature Patches: Thành phần quan trọng nhất để chơi game lậu. Giúp bỏ qua bước kiểm tra chữ ký số của Nintendo, cho phép cài và chạy file NSP/XCI không bản quyền.",
-            "urls": {
-                "Bước 1. Tải về file": "https://gbatemp.net/attachments/hekate-ams-package3-sigpatches-1-10-1p-cfw-21-1-0_v0-zip.544098/",
-                "Bước 2. Chọn file nén để tự động chép.": "ACTION_PICK_ZIP"
-            }
-        },
-        {
-            "name": "Hekate (Bootloader)", 
-            "desc": "Trình khởi động đa năng. Dùng để Backup/Restore NAND (tránh brick máy), tạo Emunand (hệ điều hành ảo), phân vùng thẻ nhớ và khởi động vào CFW.",
-            "urls": {"Tự động cài đặt": "https://github.com/CTCaer/hekate/releases/download/v6.4.2/hekate_ctcaer_6.4.2_Nyx_1.8.2.zip"}
-        },
-        {
-            "name": "Atmosphere (CFW)", 
-            "desc": "Hệ điều hành tùy chỉnh (Custom Firmware) phổ biến nhất cho Switch. Đây là nền tảng cốt lõi để chạy các ứng dụng Homebrew, Mod, và game lậu.",
-            "urls": {
-                "Tự động cài đặt (Mới nhất)": "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.10.1/atmosphere-1.10.1-master-21c0f75a2+hbl-2.4.5+hbmenu-3.6.1.zip",
-                "Atmosphere 1.9.5 (Khuyến nghị)": "ACTION_AMS_195" 
-            }
-        },
-        {
-            "name": "TegraRcmGUI (Cài trên PC)", 
-            "desc": "Phần mềm chạy trên máy tính Windows. Dùng để 'kích hack' (gửi Payload) vào Switch khi máy đang ở chế độ RCM (màn hình đen).",
-            "urls": {"Tự động cài đặt (PC)": "ACTION_RUN_PC|https://github.com/eliboa/TegraRcmGUI/releases/download/2.6/TegraRcmGUI_v2.6_Installer.msi"}
-        },
+        {"name": "Gói hack tổng hợp My Pack", "desc": "Bộ công cụ hack Switch được tùy chỉnh riêng (AIO). Bao gồm Atmosphere, Hekate và các sysmod cần thiết nhất để chạy ngay lập tức. Xem phiên bản ở dòng chữ xanh lá bên trên ", 
+        "urls": {"Bước 1. Tải về file": "ACTION_MY_PACK_WARN", "Bước 2. Chọn file nén để tự động chép.": "ACTION_PICK_ZIP"}}, 
+        {"name": "Sigpatches (Hỗ trợ game thuốc)", "desc": "Signature Patches: Thành phần quan trọng nhất để chơi game lậu. Giúp bỏ qua bước kiểm tra chữ ký số của Nintendo, cho phép cài và chạy file NSP/XCI không bản quyền.", "urls": {"Bước 1. Tải về file": "https://gbatemp.net/attachments/hekate-ams-package3-sigpatches-1-10-1p-cfw-21-1-0_v0-zip.544098/", "Bước 2. Chọn file nén để tự động chép.": "ACTION_PICK_ZIP"}},
+        {"name": "Hekate (Bootloader)", "desc": "Trình khởi động đa năng. Dùng để Backup/Restore NAND (tránh brick máy), tạo Emunand (hệ điều hành ảo), phân vùng thẻ nhớ và khởi động vào CFW.", "urls": {"Tự động cài đặt": "https://github.com/CTCaer/hekate/releases/download/v6.4.2/hekate_ctcaer_6.4.2_Nyx_1.8.2.zip"}},
+        {"name": "Atmosphere (CFW)", "desc": "Hệ điều hành tùy chỉnh (Custom Firmware) phổ biến nhất cho Switch. Đây là nền tảng cốt lõi để chạy các ứng dụng Homebrew, Mod, và game lậu.", "urls": {"Tự động cài đặt (Mới nhất)": "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.10.1/atmosphere-1.10.1-master-21c0f75a2+hbl-2.4.5+hbmenu-3.6.1.zip", "Atmosphere 1.9.5 (đọc lưu ý))": "ACTION_AMS_195" }},
+        {"name": "TegraRcmGUI (Cài trên PC)", "desc": "Phần mềm chạy trên máy tính Windows. Dùng để 'kích hack' (gửi Payload) vào Switch khi máy đang ở chế độ RCM (màn hình đen).", "urls": {"Tự động cài đặt (PC)": "ACTION_RUN_PC|https://github.com/eliboa/TegraRcmGUI/releases/download/2.6/TegraRcmGUI_v2.6_Installer.msi"}},
     ],
     "🛠️ SYSMOD HỮU ÍCH (Cần Restart)": [
-        {
-            "name": "Sys-patch", 
-            "desc": "Module tự động vá lỗi hệ thống khi khởi động (fs, ldr, es). Giúp game chạy ổn định hơn, sửa lỗi khi Sigpatches chưa cập nhật kịp.",
-            "urls": {
-                "Bước 1. Tải về file": "https://gbatemp.net/download/sys-patch-sysmodule.39471/download",
-                "Bước 2. Chọn file nén để tự động chép.": "ACTION_PICK_ZIP"
-            }
-        },
-        {
-            "name": "Tesla Menu (Overlay Menu)", 
-            "desc": "Menu phủ màn hình (Overlay). Cho phép bật/tắt cheat, xem thông tin máy, ép xung... ngay khi đang chơi game bằng tổ hợp phím (L + Dpad Down + R3).",
-            "urls": {"Tự động cài đặt (Combo)": "TESLA_ACTION"}
-        },
-        {
-            "name": "Ultrahand (Overlay mạnh mẽ)", 
-            "desc": "Một trình quản lý Overlay khác tương tự Tesla nhưng giao diện hiện đại hơn. Dùng để quản lý các plugin overlay như nghe nhạc, cheat, fps...kích hoạt bằng (ZL+ZR+DDOWN) hoặc đôi khi là (L + Dpad Down + R3) ",
-            "urls": {"Tự động cài đặt (Combo)": "ULTRAHAND_ACTION"}
-        },
-        {
-            "name": "Edizon Overlay (Cheat game)", 
-            "desc": "Plugin hiển thị menu Cheat đè lên màn hình game. Giúp bạn tìm kiếm giá trị, bật/tắt mã bất tử, vô hạn tiền ngay lập tức mà không cần thoát game.",
-            "urls": {"Tự động cài đặt": "https://github.com/proferabg/EdiZon-Overlay/releases/download/v1.0.14/ovlEdiZon.ovl", "Hướng dẫn": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/su-dung-cheat#cach-3-dung-edizon-overlay"}
-        },
-        {
-            "name": "Status Monitor (FPS/Pin/Nhiệt độ)", 
-            "desc": "Công cụ giám sát phần cứng thời gian thực (Real-time). Hiển thị FPS, nhiệt độ CPU/GPU, tốc độ RAM, % Pin... ngay góc màn hình.",
-            "urls": {"Tự động cài đặt": "https://github.com/masagrator/Status-Monitor-Overlay/releases/download/1.3.2/Status-Monitor-Overlay.zip"}
-        },
-        {
-            "name": "emuiibo (Giả lập Amiibo)", 
-            "desc": "Giả lập tượng Amiibo ảo. Cho phép nhận quà trong game (như Zelda, Splatoon) mà không cần mua tượng thật. Sử dụng cùng với Tesla Menu.",
-            "urls": {"Tự động cài đặt": "https://github.com/XorTroll/emuiibo/releases/download/1.1.2/emuiibo.zip"}
-        },
-        {
-            "name": "SYS-CLK (Ép xung)", 
-            "desc": "Công cụ ép xung (Overclock) hoặc hạ xung an toàn. Giúp game nặng chạy mượt hơn (tăng FPS) hoặc tiết kiệm pin cho game nhẹ.",
-            "urls": {"Tự động cài đặt": "https://github.com/retronx-team/sys-clk/releases/download/2.0.1/sys-clk-2.0.1-21fix.zip"}
-        },
-        {
-            "name": "SysDVR (Stream hình ảnh qua USB)", 
-            "desc": "Truyền hình ảnh và âm thanh từ Switch sang máy tính qua cáp USB hoặc Wifi. Dùng để quay video/stream game mà không cần Capture Card đắt tiền.",
-            "urls": {"1. Tải cho Switch": "https://github.com/exelix11/SysDVR/releases/download/v6.2.2/SysDVR.zip", "2. Client cho PC (7z)": "ACTION_SAVE_PC|https://github.com/exelix11/SysDVR/releases/download/v6.2.2/SysDVR-Client-Windows-x64-with-framework.7z"}
-        },
-        {
-            "name": "Mission Control", 
-            "desc": "Cho phép kết nối các tay cầm Bluetooth của hệ máy khác (PS4, PS5, Xbox One, Wii U Pro...) với Nintendo Switch mà không cần USB Receiver.",
-            "urls": {"Tự động cài đặt": "https://github.com/ndeadly/MissionControl/releases/download/v0.14.1/MissionControl-0.14.1-master-141b3aca.zip"}
-        },
-        {
-            "name": "Sys-con (USB Controllers)", 
-            "desc": "Connect wired controllers (or via USB receiver) from 3rd parties (Xbox 360, DualShock 3...) to Switch Dock.",
-            "urls": {"Tự động cài đặt": "https://github.com/o0Zz/sys-con/releases/download/1.6.1/sys-con-1.6.1.zip"}
-        },
+        {"name": "Sys-patch", "desc": "Module tự động vá lỗi hệ thống khi khởi động (fs, ldr, es). Giúp game chạy ổn định hơn, sửa lỗi khi Sigpatches chưa cập nhật kịp.", "urls": {"Bước 1. Tải về file": "https://gbatemp.net/download/sys-patch-sysmodule.39471/download", "Bước 2. Chọn file nén để tự động chép.": "ACTION_PICK_ZIP"}},
+        {"name": "Tesla Menu (Overlay Menu)", "desc": "Menu phủ màn hình (Overlay). Cho phép bật/tắt cheat, xem thông tin máy, ép xung... ngay khi đang chơi game bằng tổ hợp phím (L + Dpad Down + R3).", "urls": {"Tự động cài đặt (Combo)": "TESLA_ACTION"}},
+        {"name": "Ultrahand (Overlay mạnh mẽ)", "desc": "Một trình quản lý Overlay khác tương tự Tesla nhưng giao diện hiện đại hơn. Dùng để quản lý các plugin overlay như nghe nhạc, cheat, fps...kích hoạt bằng (ZL+ZR+DDOWN).", "urls": {"Tự động cài đặt (Combo)": "ULTRAHAND_ACTION"}},
+        {"name": "Edizon Overlay (Cheat game)", "desc": "Plugin hiển thị menu Cheat đè lên màn hình game. Giúp bạn tìm kiếm giá trị, bật/tắt mã bất tử, vô hạn tiền ngay lập tức mà không cần thoát game.", "urls": {"Tự động cài đặt": "https://github.com/proferabg/EdiZon-Overlay/releases/download/v1.0.14/ovlEdiZon.ovl", "Hướng dẫn": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/su-dung-cheat#cach-3-dung-edizon-overlay"}},
+        {"name": "Status Monitor (FPS/Pin/Nhiệt độ)", "desc": "Công cụ giám sát phần cứng thời gian thực (Real-time). Hiển thị FPS, nhiệt độ CPU/GPU, tốc độ RAM, % Pin... ngay góc màn hình.", "urls": {"Tự động cài đặt": "https://github.com/masagrator/Status-Monitor-Overlay/releases/download/1.3.2/Status-Monitor-Overlay.zip"}},
+        {"name": "emuiibo (Giả lập Amiibo)", "desc": "Giả lập tượng Amiibo ảo. Cho phép nhận quà trong game (như Zelda, Splatoon) mà không cần mua tượng thật. Sử dụng cùng với Tesla Menu.", "urls": {"Tự động cài đặt": "https://github.com/XorTroll/emuiibo/releases/download/1.1.2/emuiibo.zip"}},
+        {"name": "SYS-CLK (Ép xung)", "desc": "Công cụ ép xung (Overclock) hoặc hạ xung an toàn. Giúp game nặng chạy mượt hơn (tăng FPS) hoặc tiết kiệm pin cho game nhẹ.", "urls": {"Tự động cài đặt": "https://github.com/retronx-team/sys-clk/releases/download/2.0.1/sys-clk-2.0.1-21fix.zip"}},
+        {"name": "SysDVR (Stream hình ảnh qua USB)", "desc": "Truyền hình ảnh và âm thanh từ Switch sang máy tính qua cáp USB hoặc Wifi. Dùng để quay video/stream game mà không cần Capture Card đắt tiền.", "urls": {"1. Tải cho Switch": "https://github.com/exelix11/SysDVR/releases/download/v6.2.2/SysDVR.zip", "2. Client cho PC (7z)": "ACTION_SAVE_PC|https://github.com/exelix11/SysDVR/releases/download/v6.2.2/SysDVR-Client-Windows-x64-with-framework.7z"}},
+        {"name": "Mission Control", "desc": "Cho phép kết nối các tay cầm Bluetooth của hệ máy khác (PS4, PS5, Xbox One, Wii U Pro...) với Nintendo Switch mà không cần USB Receiver.", "urls": {"Tự động cài đặt": "https://github.com/ndeadly/MissionControl/releases/download/v0.14.1/MissionControl-0.14.1-master-141b3aca.zip"}},
+        {"name": "Sys-con (USB Controllers)", "desc": "Cho phép kết nối tay cầm có dây (hoặc qua USB receiver) của bên thứ 3 (Xbox 360, DualShock 3...) với Switch Dock.", "urls": {"Tự động cài đặt": "https://github.com/o0Zz/sys-con/releases/download/1.6.1/sys-con-1.6.1.zip"}},
     ],
     "🎮 HOMEBREW (Ứng dụng)": [
-        {
-            "name": "HB App Store", 
-            "desc": "Chợ ứng dụng Homebrew trực tuyến. Nơi tìm kiếm, tải xuống và cập nhật hàng trăm ứng dụng tiện ích, game homebrew trực tiếp trên Switch.",
-            "urls": {"Tự động cài đặt": "https://github.com/fortheusers/hb-appstore/releases/download/v2.3.2/appstore.nro"}
-        },
-        {
-            "name": "AIO Switch Updater", 
-            "desc": "Công cụ cập nhật tất cả trong một ngay trên Switch. Tự động tải và cập nhật Atmosphere, Firmware, Cheat... trực tiếp qua Wifi mà không cần PC.",
-            "urls": {"Tự động cài đặt": "https://github.com/HamletDuFromage/aio-switch-updater/releases/download/2.23.3/aio-switch-updater.zip"}
-        },
-        {
-            "name": "Edizon (Cheat)", 
-            "desc": "Ứng dụng quản lý Save game và Cheat code mạnh mẽ. Dùng để sao lưu save game ra thẻ nhớ hoặc kích hoạt các mã gian lận.",
-            "urls": {"Tự động cài đặt": "https://github.com/WerWolv/EdiZon/releases/download/v3.1.0/EdiZon.nro"}
-        },
-        {
-            "name": "Breeze (Cheat)", 
-            "desc": "Công cụ Cheat nâng cao (kế thừa Edizon). Hỗ trợ tìm kiếm giá trị bộ nhớ phức tạp hơn để tự tạo mã cheat.",
-            "urls": {"Tự động cài đặt": "https://github.com/tomvita/Breeze-Beta/releases/download/beta99r/Breeze.zip"}
-        },
-        {
-            "name": "Retroarch (Giả lập)", 
-            "desc": "Trình giả lập đa hệ máy 'All-in-one'. Chơi được game của NES, SNES, GBA, PS1, N64, Arcade... ngay trên Switch.",
-            "urls": {"Truy cập Web": "https://buildbot.libretro.com/nightly/nintendo/switch/libnx/"}
-        },
-        {
-            "name": "pEmu (Giả lập)", 
-            "desc": "Bộ sưu tập các trình giả lập (pFBA, pSNES...) được tối ưu hóa riêng cho Switch bởi Cpasjuste. Giao diện đẹp và hiệu năng tốt.",
-            "urls": {"Truy cập Web": "https://github.com/Cpasjuste/pemu/releases/latest"}
-        },
-        {
-            "name": "DBI (Quản lý file + Cài game)", 
-            "desc": "Công cụ 'Thần thánh' cho Switch. Hỗ trợ cài game qua cáp USB (MTP) cực nhanh, xóa file rác, quản lý file trên thẻ nhớ giao diện trực quan.",
-            "urls": {"Tự động cài đặt": "https://github.com/rashevskyv/dbi/releases/download/854ru/DBI.nro"}
-        },
-        {
-            "name": "Tinfoil (Shop game)", 
-            "desc": "Cửa hàng tải game miễn phí (FreeShop) nổi tiếng (cần add host). Cũng là trình quản lý file và cài đặt game giao diện đẹp mắt. Tuy nhiên không tương thích với atmosphere mới nhất nữa, bạn hãy chọn mở trang download atmosphere, tải bản 1.9.5 đổ xuống với điều kiện OFW lẫn CFW <21.0.0 thì mới sử dụng được",
-            "urls": {"Truy cập Web": "https://tinfoil.io/Download#download"}
-        },
-        {
-            "name": "Goldleaf", 
-            "desc": "Trình quản lý file và cài đặt file NSP/NSZ/XCI cơ bản, mã nguồn mở. Hỗ trợ duyệt file trên thẻ nhớ và cài game qua USB (với Quark).",
-            "urls": {"Tự động cài đặt": "https://github.com/XorTroll/Goldleaf/releases/download/1.2.0/Goldleaf.nro"}
-        },
-        {
-            "name": "Linkalho (Link Offline)", 
-            "desc": "Công cụ liên kết tài khoản Nintendo giả lập (Offline). Bắt buộc dùng nếu bạn chơi game yêu cầu có tài khoản Nintendo nhưng máy bị ban hoặc không muốn online.",
-            "urls": {
-                "Bước 1. Tải về file": "https://dlhb.gamebrew.org/switchhomebrews/linkalhonx.7z",
-                "Bước 2. Chọn file nén để tự động chép.": "ACTION_LINKALHO_NESTED"
-            }
-        },
-      
-        {
-            "name": "Combo: Theme Installer + Themezer", 
-            "desc": "Cài đặt cùng lúc 2 ứng dụng: NXThemes Installer (Quản lý/Cài theme) và Themezer-NX (Tải theme online).",
-            "urls": {
-                "Theme installer + Themezer": "THEME_COMBO_ACTION",
-                "🌐 Mở trang download": "https://github.com/exelix11/SwitchThemeInjector/releases"
-            }
-        },
-        {
-            "name": "Battery Desync Fix (Sửa Pin ảo)", 
-            "desc": "Công cụ hiệu chỉnh lại hiển thị phần trăm pin khi bị báo sai (Pin ảo).",
-            "urls": {
-                "Tự động cài đặt": "https://github.com/CTCaer/battery_desync_fix_nx/releases/download/1.5.1/battery_desync_fix_v1.5.1.nro",
-                "📖 Hướng dẫn sử dụng": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap/hieu-chuan-pin-ao"
-            }
-        },
+        {"name": "HB App Store", "desc": "Chợ ứng dụng Homebrew trực tuyến. Nơi tìm kiếm, tải xuống và cập nhật hàng trăm ứng dụng tiện ích, game homebrew trực tiếp trên Switch.", "urls": {"Tự động cài đặt": "https://github.com/fortheusers/hb-appstore/releases/download/v2.3.2/appstore.nro"}},
+        {"name": "AIO Switch Updater", "desc": "Công cụ cập nhật tất cả trong một ngay trên Switch. Tự động tải và cập nhật Atmosphere, Firmware, Cheat... trực tiếp qua Wifi mà không cần PC.", "urls": {"Tự động cài đặt": "https://github.com/HamletDuFromage/aio-switch-updater/releases/download/2.23.3/aio-switch-updater.zip"}},
+        {"name": "Edizon (Cheat)", "desc": "Ứng dụng quản lý Save game và Cheat code mạnh mẽ. Dùng để sao lưu save game ra thẻ nhớ hoặc kích hoạt các mã gian lận.", "urls": {"Tự động cài đặt": "https://github.com/WerWolv/EdiZon/releases/download/v3.1.0/EdiZon.nro"}},
+        {"name": "Breeze (Cheat)", "desc": "Công cụ Cheat nâng cao (kế thừa Edizon). Hỗ trợ tìm kiếm giá trị bộ nhớ phức tạp hơn để tự tạo mã cheat.", "urls": {"Tự động cài đặt": "https://github.com/tomvita/Breeze-Beta/releases/download/beta99r/Breeze.zip"}},
+        {"name": "Retroarch (Giả lập)", "desc": "Trình giả lập đa hệ máy 'All-in-one'. Chơi được game của NES, SNES, GBA, PS1, N64, Arcade... ngay trên Switch.", "urls": {"Truy cập Web": "https://buildbot.libretro.com/nightly/nintendo/switch/libnx/"}},
+        {"name": "pEmu (Giả lập)", "desc": "Bộ sưu tập các trình giả lập (pFBA, pSNES...) được tối ưu hóa riêng cho Switch bởi Cpasjuste. Giao diện đẹp và hiệu năng tốt.", "urls": {"Truy cập Web": "https://github.com/Cpasjuste/pemu/releases/latest"}},
+        {"name": "DBI (Quản lý file + Cài game)", "desc": "Công cụ 'Thần thánh' cho Switch. Hỗ trợ cài game qua cáp USB (MTP) cực nhanh, xóa file rác, quản lý file trên thẻ nhớ giao diện trực quan.", "urls": {"Tự động cài đặt": "https://github.com/rashevskyv/dbi/releases/download/854ru/DBI.nro"}},
+        {"name": "Tinfoil (Shop game)", "desc": "Cửa hàng tải game miễn phí (FreeShop) nổi tiếng (cần add host). Cũng là trình quản lý file và cài đặt game giao diện đẹp mắt. Tuy nhiên không tương thích với atmosphere mới nhất nữa.", "urls": {"Truy cập Web": "https://tinfoil.io/Download#download"}},
+        {"name": "Goldleaf", "desc": "Trình quản lý file và cài đặt file NSP/NSZ/XCI cơ bản, mã nguồn mở. Hỗ trợ duyệt file trên thẻ nhớ và cài game qua USB (với Quark).", "urls": {"Tự động cài đặt": "https://github.com/XorTroll/Goldleaf/releases/download/1.2.0/Goldleaf.nro"}},
+        {"name": "Linkalho (Link Offline)", "desc": "Công cụ liên kết tài khoản Nintendo giả lập (Offline). Bắt buộc dùng nếu bạn chơi game yêu cầu có tài khoản Nintendo nhưng máy bị ban hoặc không muốn online.", "urls": {"Bước 1. Tải về file": "https://dlhb.gamebrew.org/switchhomebrews/linkalhonx.7z", "Bước 2. Chọn file nén để tự động chép.": "ACTION_LINKALHO_NESTED"}},
+        {"name": "Combo: Theme Installer + Themezer", "desc": "Cài đặt cùng lúc 2 ứng dụng: NXThemes Installer (Quản lý/Cài theme) và Themezer-NX (Tải theme online).", "urls": {"Theme installer + Themezer": "THEME_COMBO_ACTION", "🌐 Mở trang download": "https://github.com/exelix11/SwitchThemeInjector/releases"}},
+        {"name": "Battery Desync Fix (Sửa Pin ảo)", "desc": "Công cụ hiệu chỉnh lại hiển thị phần trăm pin khi bị báo sai (Pin ảo).", "urls": {"Tự động cài đặt": "https://github.com/CTCaer/battery_desync_fix_nx/releases/download/1.5.1/battery_desync_fix_v1.5.1.nro", "📖 Hướng dẫn sử dụng": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap/hieu-chuan-pin-ao"}},
     ],
     "⚙️ LINH TINH (Firmware/Cheat/Save)": [
-        {
-            "name": "Firmware (Nâng/Hạ cấp)", 
-            "desc": "Các file hệ điều hành gốc của Nintendo Switch. Cần thiết khi bạn muốn cập nhật máy lên phiên bản mới nhất bằng Daybreak.",
-            "urls": {
-                "Link tải tổng hợp 1": "https://darthsternie.net/switch-firmwares/", 
-                "Link tải tổng hợp 2": "https://github.com/THZoria/NX_Firmware/releases",
-                "Hướng dẫn Update": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/cap-nhat-firmware-cho-emunand"
-            }
-        },
-        {
-            "name": "Cheat game (Tổng hợp)", 
-            "desc": "Kho mã Cheat do cộng đồng tổng hợp. Tải về để cập nhật các mã cheat mới nhất cho Edizon/Breeze.",
-            "urls": {
-                "GBAtemp": "https://gbatemp.net/threads/cheat-codes-ams-and-sx-os-add-and-request.520293/",
-                "CheatSlips": "https://www.cheatslips.com/",
-                "Hướng dẫn": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/su-dung-cheat"
-            }
-        },
-        {
-            "name": "Save Game (Nguồn tải)", 
-            "desc": "Các kho lưu trữ Save game (File lưu tiến độ game) được chia sẻ bởi cộng đồng. Hữu ích khi bạn muốn chơi New Game+ hoặc mất save.",
-            "urls": {
-                "GBAtemp Save": "https://gbatemp.net/download/categories/game-saves.1668/",
-                "TheTechGame": "https://www.thetechgame.com/Downloads/cid=135/nintendo-switch-game-saves.html",
-                "Hướng dẫn": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/sao-luu-va-phuc-hoi-save-game"
-            }
-        },
-        {
-            "name": "Việt hóa game", 
-            "desc": "Tổng hợp các bản Patch tiếng Việt cho game Switch. Cần tải về và cài đặt đúng thư mục (thường là atmosphere/contents).",
-            "urls": {"Link tham khảo": "https://docs.google.com/spreadsheets/d/1k_8w_Eb7M6_3q1-FrtY0gYdrCokr3IGxuk-oj_u-zbw/preview"}
-        },
+        {"name": "Firmware (Nâng/Hạ cấp)", "desc": "Các file hệ điều hành gốc của Nintendo Switch. Cần thiết khi bạn muốn cập nhật máy lên phiên bản mới nhất bằng Daybreak.", "urls": {"Link tải tổng hợp 1": "https://darthsternie.net/switch-firmwares/", "Link tải tổng hợp 2": "https://github.com/THZoria/NX_Firmware/releases", "Hướng dẫn Update": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/cap-nhat-firmware-cho-emunand"}},
+        {"name": "Cheat game (Tổng hợp)", "desc": "Kho mã Cheat do cộng đồng tổng hợp. Tải về để cập nhật các mã cheat mới nhất cho Edizon/Breeze.", "urls": {"GBAtemp": "https://gbatemp.net/threads/cheat-codes-ams-and-sx-os-add-and-request.520293/", "CheatSlips": "https://www.cheatslips.com/", "Hướng dẫn": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/su-dung-cheat"}},
+        {"name": "Save Game (Nguồn tải)", "desc": "Các kho lưu trữ Save game (File lưu tiến độ game) được chia sẻ bởi cộng đồng. Hữu ích khi bạn muốn chơi New Game+ hoặc mất save.", "urls": {"GBAtemp Save": "https://gbatemp.net/download/categories/game-saves.1668/", "TheTechGame": "https://www.thetechgame.com/Downloads/cid=135/nintendo-switch-game-saves.html", "Hướng dẫn": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/sao-luu-va-phuc-hoi-save-game"}},
+        {"name": "Việt hóa game", "desc": "Tổng hợp các bản Patch tiếng Việt cho game Switch. Cần tải về và cài đặt đúng thư mục (thường là atmosphere/contents).", "urls": {"Link tham khảo": "https://docs.google.com/spreadsheets/d/1k_8w_Eb7M6_3q1-FrtY0gYdrCokr3IGxuk-oj_u-zbw/preview"}},
     ],
     "🚑 FIX LỖI NHANH (Sự cố thường gặp)": [
-        {
-            "name": "Cài lại gói hack My Pack (Khuyến nghị)", 
-            "desc": "Cách sửa lỗi triệt để nhất khi máy bị lỗi nặng. Hệ thống sẽ đưa bạn đến mục tải gói hack chuẩn để cài lại từ đầu.",
-            "urls": {"🛠️ Chạy Fix": "ACTION_FIX_REINSTALL_PACK"}
-        },
-        {
-            "name": "Gỡ bỏ Themes (Fix màn hình đen/Bootloop)", 
-            "desc": "Xóa thư mục theme (0100000000001000). Dùng khi bạn cài theme lỗi khiến máy không khởi động được hoặc bị màn hình đen sau logo Atmosphere.",
-            "urls": {"🛠️ Chạy Fix": "ACTION_FIX_THEMES"}
-        },
-        {
-            "name": "Gỡ bỏ các Sysmodules phổ biến", 
-            "desc": "Chỉ xóa các module chạy ngầm phổ biến (Tesla, Emuiibo, SysDVR...). Giữ lại Việt hóa và Mod game. Dùng khi máy hay bị Crash nhẹ.",
-            "urls": {"🛠️ Chạy Fix": "ACTION_FIX_MODULES"}
-        },
-        {
-            "name": "Xóa SẠCH thư mục Contents (Triệt để)", 
-            "desc": "CẢNH BÁO: Xóa toàn bộ folder atmosphere/contents. Sẽ mất hết Sysmod, Mod game, Việt hóa và Cheat. Dùng khi máy lỗi nặng, crash liên tục.",
-            "urls": {"🔥 Chạy Fix": "ACTION_FIX_DELETE_ALL_CONTENTS"}
-        },
-        {
-            "name": "Xóa file rác MacOS (Fix Archive Bit)", 
-            "desc": "Quét và xóa các file rác do MacOS tạo ra (._file, .DS_Store). Những file này thường làm Hekate không đọc được cấu hình.",
-            "urls": {"🛠️ Chạy Fix": "ACTION_FIX_MAC_JUNK"}
-        },
-        {
-            "name": "Xóa toàn bộ Cheats (Fix Game Crash)", 
-            "desc": "Xóa tất cả file cheat trong thư mục contents. Dùng khi vào game bị crash ngay lập tức do mã cheat cũ xung đột.",
-            "urls": {"🛠️ Chạy Fix": "ACTION_FIX_CHEATS"}
-        },
-        {
-            "name": "Các lỗi khác (nguồn: Cộng Đồng Nintendo Switch hắc ám)", 
-            "desc": "Tra cứu danh sách các lỗi thường gặp khác và cách khắc phục chi tiết trên Wiki của cộng đồng.",
-            "urls": {"🌍 Xem hướng dẫn Web": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap"}
-        }
+        {"name": "HARD RESET (XÓA SẠCH LÀM LẠI)", "desc": "Sử dụng khi các cách fix mềm không hiệu quả. Xóa sạch thẻ nhớ (chỉ giữ emuMMC) và cài lại My Pack.", "urls": {"☢️ CHẠY RESET": "ACTION_FIX_HARD_RESET"}},
+        {"name": "Cài lại gói hack My Pack (Khuyến nghị)", "desc": "Cách sửa lỗi triệt để nhất khi máy bị lỗi nặng. Hệ thống sẽ đưa bạn đến mục tải gói hack chuẩn để cài lại từ đầu.", "urls": {"🛠️ Chạy Fix": "ACTION_FIX_REINSTALL_PACK"}},
+        {"name": "Gỡ bỏ Themes (Fix màn hình đen/Bootloop)", "desc": "Xóa thư mục theme (0100000000001000). Dùng khi bạn cài theme lỗi khiến máy không khởi động được hoặc bị màn hình đen sau logo Atmosphere.", "urls": {"🛠️ Chạy Fix": "ACTION_FIX_THEMES"}},
+        {"name": "Gỡ bỏ các Sysmodules phổ biến", "desc": "Chỉ xóa các module chạy ngầm phổ biến (Tesla, Emuiibo, SysDVR...). Giữ lại Việt hóa và Mod game. Dùng khi máy hay bị Crash nhẹ.", "urls": {"🛠️ Chạy Fix": "ACTION_FIX_MODULES"}},
+        {"name": "Xóa SẠCH thư mục Contents (Triệt để)", "desc": "CẢNH BÁO: Xóa toàn bộ folder atmosphere/contents. Sẽ mất hết Sysmod, Mod game, Việt hóa và Cheat. Dùng khi máy lỗi nặng, crash liên tục.", "urls": {"🔥 Chạy Fix": "ACTION_FIX_DELETE_ALL_CONTENTS"}},
+        {"name": "Xóa file rác MacOS (Fix Archive Bit)", "desc": "Quét và xóa các file rác do MacOS tạo ra (._file, .DS_Store). Những file này thường làm Hekate không đọc được cấu hình.", "urls": {"🛠️ Chạy Fix": "ACTION_FIX_MAC_JUNK"}},
+        {"name": "Xóa toàn bộ Cheats (Fix Game Crash)", "desc": "Xóa tất cả file cheat trong thư mục contents. Dùng khi vào game bị crash ngay lập tức do mã cheat cũ xung đột.", "urls": {"🛠️ Chạy Fix": "ACTION_FIX_CHEATS"}},
+        {"name": "Các lỗi khác (nguồn: Cộng Đồng Nintendo Switch hắc ám)", "desc": "Tra cứu danh sách các lỗi thường gặp khác và cách khắc phục chi tiết trên Wiki của cộng đồng.", "urls": {"🌍 Xem hướng dẫn Web": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap"}}
     ],
     "📚 CÁC HƯỚNG DẪN (nguồn: Cộng Đồng Nintendo Switch hắc ám)": [
-        {
-            "name": "Hướng dẫn căn bản ", 
-            "desc": "Các kiến thức nhập môn cần thiết: Phân biệt đời máy, thuật ngữ hack, hướng dẫn sử dụng cơ bản cho người mới bắt đầu.",
-            "urls": {"🌍 Truy cập Web": "https://nsw.gitbook.io/guide/huong-dan-can-ban/"}
-        },
-         {
-            "name": "Hướng dẫn nâng cao ", 
-            "desc": "Tổng hợp các bài viết chuyên sâu: Tạo EmuMMC, Ẩn số seri (Incognito), Phân vùng thẻ nhớ, Sao lưu Nand...",
-            "urls": {"🌍 Truy cập Web": "https://nsw.gitbook.io/guide/huong-dan-nang-cao"}
-        },
+        {"name": "Hướng dẫn căn bản ", "desc": "Các kiến thức nhập môn cần thiết: Phân biệt đời máy, thuật ngữ hack, hướng dẫn sử dụng cơ bản cho người mới bắt đầu.", "urls": {"🌍 Truy cập Web": "https://nsw.gitbook.io/guide/huong-dan-can-ban/"}},
+        {"name": "Hướng dẫn nâng cao ", "desc": "Tổng hợp các bài viết chuyên sâu: Tạo EmuMMC, Ẩn số seri (Incognito), Phân vùng thẻ nhớ, Sao lưu Nand...", "urls": {"🌍 Truy cập Web": "https://nsw.gitbook.io/guide/huong-dan-nang-cao"}}
     ],
     "👾 NGUỒN DOWNLOAD GAME": [
-        {
-            "name": "Website tải game Switch",
-            "desc": "Kho game Switch phong phú, cập nhật thường xuyên.",
-            "urls": {"Link tham khảo": "https://rebrand.ly/tsufurom"}
-        }
+        {"name": "Website tải game Switch", "desc": "Kho game Switch phong phú, cập nhật thường xuyên.", "urls": {"Link tham khảo": "https://rebrand.ly/tsufurom"}}
     ]
 }
 
-# --- DỮ LIỆU DỊCH (ENGLISH) ---
 DATA_EN = {
-    "🔥 HACK FILES & PC TOOLS": [
-        {
-            "name": "My Pack AIO Hack", 
-            "desc": "Custom Switch hack toolkit (AIO). Includes Atmosphere, Hekate, and essential sysmods to run immediately.",
-            "urls": {
-                "Step 1. Download file": "https://rebrand.ly/mypack",
-                "Step 2. Pick Zip to Auto Install": "ACTION_PICK_ZIP"
-            }
-        }, 
-        {
-            "name": "Sigpatches (Piracy Support)", 
-            "desc": "Signature Patches: Essential for playing pirated games. Bypasses Nintendo's signature check, allowing NSP/XCI installation.",
-            "urls": {
-                "Step 1. Download file": "https://gbatemp.net/attachments/hekate-ams-package3-sigpatches-1-10-1p-cfw-21-1-0_v0-zip.544098/",
-                "Step 2. Pick Zip to Auto Install": "ACTION_PICK_ZIP"
-            }
-        },
-        {
-            "name": "Hekate (Bootloader)", 
-            "desc": "All-in-one bootloader. Used for Backup/Restore NAND, Create Emunand, Partition SD Card, and boot into CFW.",
-            "urls": {"Auto Install": "https://github.com/CTCaer/hekate/releases/download/v6.4.2/hekate_ctcaer_6.4.2_Nyx_1.8.2.zip"}
-        },
-        {
-            "name": "Atmosphere (CFW)", 
-            "desc": "Most popular Custom Firmware for Switch. Core platform for running Homebrew, Mods, and Pirated games.",
-            "urls": {
-                "Auto Install (Latest)": "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.10.1/atmosphere-1.10.1-master-21c0f75a2+hbl-2.4.5+hbmenu-3.6.1.zip",
-                "Atmosphere 1.9.5 (Recommended)": "ACTION_AMS_195"
-            }
-        },
-        {
-            "name": "TegraRcmGUI (PC App)", 
-            "desc": "Windows PC Software. Used to inject Payload into Switch when in RCM mode (black screen).",
-            "urls": {"Auto Install (PC)": "ACTION_RUN_PC|https://github.com/eliboa/TegraRcmGUI/releases/download/2.6/TegraRcmGUI_v2.6_Installer.msi"}
-        },
-    ],
-    "🛠️ USEFUL SYSMODS (Restart Required)": [
-        {
-            "name": "Sys-patch", 
-            "desc": "Module to automatically patch system errors on boot (fs, ldr, es). Helps games run more stable.",
-            "urls": {
-                "Step 1. Download file": "https://gbatemp.net/download/sys-patch-sysmodule.39471/download",
-                "Step 2. Pick Zip to Auto Install": "ACTION_PICK_ZIP"
-            }
-        },
-        {
-            "name": "Tesla Menu (Overlay Menu)", 
-            "desc": "Overlay Menu. Allows toggling cheats, viewing system info, overclocking... while playing games (Combo: L + Dpad Down + R3).",
-            "urls": {"Auto Install (Combo)": "TESLA_ACTION"}
-        },
-        {
-            "name": "Ultrahand (Overlay Manager)", 
-            "desc": "Another Overlay manager similar to Tesla but with a modern UI.",
-            "urls": {"Auto Install (Combo)": "ULTRAHAND_ACTION"}
-        },
-        {
-            "name": "Edizon Overlay (Cheat game)", 
-            "desc": "Plugin to display Cheat menu over the game. Search values, toggle cheats, infinite money without quitting game.",
-            "urls": {"Auto Install": "https://github.com/proferabg/EdiZon-Overlay/releases/download/v1.0.14/ovlEdiZon.ovl", "Guide": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/su-dung-cheat#cach-3-dung-edizon-overlay"}
-        },
-        {
-            "name": "Status Monitor (FPS/Battery/Temp)", 
-            "desc": "Real-time hardware monitor. Displays FPS, CPU/GPU Temp, RAM speed, Battery %...",
-            "urls": {"Auto Install": "https://github.com/masagrator/Status-Monitor-Overlay/releases/download/1.3.2/Status-Monitor-Overlay.zip"}
-        },
-        {
-            "name": "emuiibo (Amiibo Emulator)", 
-            "desc": "Virtual Amiibo emulator. Get in-game rewards (Zelda, Splatoon) without real figures. Used with Tesla Menu.",
-            "urls": {"Auto Install": "https://github.com/XorTroll/emuiibo/releases/download/1.1.2/emuiibo.zip"}
-        },
-        {
-            "name": "SYS-CLK (Overclock)", 
-            "desc": "Overclock or Underclock tool. Helps heavy games run smoother (higher FPS) or save battery.",
-            "urls": {"Auto Install": "https://github.com/retronx-team/sys-clk/releases/download/2.0.1/sys-clk-2.0.1-21fix.zip"}
-        },
-        {
-            "name": "SysDVR (Stream via USB)", 
-            "desc": "Stream video and audio from Switch to PC via USB or Wifi. Record/Stream without Capture Card.",
-            "urls": {"1. Download for Switch": "https://github.com/exelix11/SysDVR/releases/download/v6.2.2/SysDVR.zip", "2. Client for PC (7z)": "ACTION_SAVE_PC|https://github.com/exelix11/SysDVR/releases/download/v6.2.2/SysDVR-Client-Windows-x64-with-framework.7z"}
-        },
-        {
-            "name": "Mission Control", 
-            "desc": "Connect Bluetooth controllers from other systems (PS4, PS5, Xbox One, Wii U Pro...) to Switch without USB Receiver.",
-            "urls": {"Auto Install": "https://github.com/ndeadly/MissionControl/releases/download/v0.14.1/MissionControl-0.14.1-master-141b3aca.zip"}
-        },
-        {
-            "name": "Sys-con (USB Controllers)", 
-            "desc": "Connect wired controllers (or via USB receiver) from 3rd parties (Xbox 360, DualShock 3...) to Switch Dock.",
-            "urls": {"Auto Install": "https://github.com/o0Zz/sys-con/releases/download/1.6.1/sys-con-1.6.1.zip"}
-        },
-    ],
-    "🎮 HOMEBREW (Apps)": [
-        {
-            "name": "HB App Store", 
-            "desc": "Online Homebrew App Store. Search, download, and update hundreds of utilities and homebrew games.",
-            "urls": {"Auto Install": "https://github.com/fortheusers/hb-appstore/releases/download/v2.3.2/appstore.nro"}
-        },
-        {
-            "name": "AIO Switch Updater", 
-            "desc": "All-in-one updater tool directly on Switch. Download/Update Atmosphere, Firmware, Cheats... via Wifi without PC.",
-            "urls": {"Auto Install": "https://github.com/HamletDuFromage/aio-switch-updater/releases/download/2.23.3/aio-switch-updater.zip"}
-        },
-        {
-            "name": "Edizon (Cheat)", 
-            "desc": "Save game manager and Cheat code tool. Backup save files or activate cheat codes.",
-            "urls": {"Auto Install": "https://github.com/WerWolv/EdiZon/releases/download/v3.1.0/EdiZon.nro"}
-        },
-        {
-            "name": "Breeze (Cheat)", 
-            "desc": "Advanced Cheat tool (Successor to Edizon). Supports searching complex memory values.",
-            "urls": {"Auto Install": "https://github.com/tomvita/Breeze-Beta/releases/download/beta99r/Breeze.zip"}
-        },
-        {
-            "name": "Retroarch (Emulator)", 
-            "desc": "All-in-one emulator. Play NES, SNES, GBA, PS1, N64, Arcade... on Switch.",
-            "urls": {"Open Web": "https://buildbot.libretro.com/nightly/nintendo/switch/libnx/"}
-        },
-        {
-            "name": "pEmu (Emulator)", 
-            "desc": "Collection of optimized emulators (pFBA, pSNES...) by Cpasjuste. Nice UI and good performance.",
-            "urls": {"Open Web": "https://github.com/Cpasjuste/pemu/releases/latest"}
-        },
-        {
-            "name": "DBI (File Manager + Installer)", 
-            "desc": "God-tier tool for Switch. Install games via USB (MTP), clean junk files, manage SD card files.",
-            "urls": {"Auto Install": "https://github.com/rashevskyv/dbi/releases/download/854ru/DBI.nro"}
-        },
-        {
-            "name": "Tinfoil (Game Shop)", 
-            "desc": "Famous FreeShop (needs host). Also a beautiful file manager and game installer.",
-            "urls": {"Open Web": "https://tinfoil.io/Download#download"}
-        },
-        {
-            "name": "Goldleaf", 
-            "desc": "Open source file manager and NSP/NSZ/XCI installer. Browse SD card and install via USB (with Quark).",
-            "urls": {"Auto Install": "https://github.com/XorTroll/Goldleaf/releases/download/1.2.0/Goldleaf.nro"}
-        },
-        {
-            "name": "Linkalho (Offline Account)", 
-            "desc": "Link fake Nintendo account (Offline). Required if game asks for Nintendo account but you are banned or offline.",
-            "urls": {
-                "Step 1. Download file": "https://dlhb.gamebrew.org/switchhomebrews/linkalhonx.7z",
-                "Step 2. Pick Zip to Auto Install": "ACTION_LINKALHO_NESTED"
-            }
-        },
-        {
-            "name": "Themezer (NXThemes Installer)", 
-            "desc": "Themes manager and installer for Switch. Browse and install themes directly from Themezer.",
-            "urls": {"Auto Install": "https://github.com/exelix11/SwitchThemeInjector/releases/download/v4.7.1/NXThemesInstaller.nro"}
-        },
-        {
-            "name": "NX Installer", 
-            "desc": "Installation tool for software packages or games.",
-            "urls": {"Auto Install": "PASTE_YOUR_DOWNLOAD_LINK_HERE"}
-        },
-        {
-            "name": "Combo: Theme Installer + Themezer", 
-            "desc": "Installs both: NXThemes Installer (Theme Manager) and Themezer-NX (Online Theme Downloader).",
-            "urls": {
-                "Theme installer + Themezer": "THEME_COMBO_ACTION",
-                "🌐 Open Download Page": "https://github.com/exelix11/SwitchThemeInjector/releases"
-            }
-        },
-        {
-            "name": "Battery Desync Fix", 
-            "desc": "Calibrate battery percentage display when it shows incorrect values.",
-            "urls": {
-                "Auto Install": "https://github.com/CTCaer/battery_desync_fix_nx/releases/download/1.5.1/battery_desync_fix_v1.5.1.nro",
-                "📖 Usage Guide": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap/hieu-chuan-pin-ao"
-            }
-        },
-    ],
-    "⚙️ MISC (Firmware/Cheat/Save)": [
-        {
-            "name": "Firmware (Up/Downgrade)", 
-            "desc": "Original Nintendo Switch Firmware files. Needed when updating system using Daybreak.",
-            "urls": {
-                "Link Collection 1": "https://darthsternie.net/switch-firmwares/", 
-                "Link Collection 2": "https://github.com/THZoria/NX_Firmware/releases",
-                "Update Guide": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/cap-nhat-firmware-cho-emunand"
-            }
-        },
-        {
-            "name": "Cheat game (Database)", 
-            "desc": "Cheat codes collected by community. Download to update latest cheats for Edizon/Breeze.",
-            "urls": {
-                "GBAtemp": "https://gbatemp.net/threads/cheat-codes-ams-and-sx-os-add-and-request.520293/",
-                "CheatSlips": "https://www.cheatslips.com/",
-                "Guide": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/su-dung-cheat"
-            }
-        },
-        {
-            "name": "Save Game (Database)", 
-            "desc": "Save game files shared by community. Useful for New Game+ or lost saves.",
-            "urls": {
-                "GBAtemp Save": "https://gbatemp.net/download/categories/game-saves.1668/",
-                "TheTechGame": "https://www.thetechgame.com/Downloads/cid=135/nintendo-switch-game-saves.html",
-                "Guide": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/sao-luu-va-phuc-hoi-save-game"
-            }
-        },
-        {
-            "name": "Game Translation", 
-            "desc": "Vietnamese patches for Switch games. Download and install to correct folder (usually atmosphere/contents).",
-            "urls": {"Reference Link": "https://docs.google.com/spreadsheets/d/1k_8w_Eb7M6_3q1-FrtY0gYdrCokr3IGxuk-oj_u-zbw/preview"}
-        },
-    ],
-    "🚑 QUICK FIX (Common Issues)": [
-        {
-            "name": "Reinstall My Pack (Recommended)", 
-            "desc": "Best way to fix severe errors. System will guide you to download the standard hack pack to reinstall.",
-            "urls": {"🛠️ Run Fix": "ACTION_FIX_REINSTALL_PACK"}
-        },
-        {
-            "name": "Remove Themes (Fix Black Screen)", 
-            "desc": "Delete theme folder (0100000000001000). Use when theme causes boot failure or black screen.",
-            "urls": {"🛠️ Run Fix": "ACTION_FIX_THEMES"}
-        },
-        {
-            "name": "Remove Common Sysmodules", 
-            "desc": "Only delete background modules (Tesla, Emuiibo, SysDVR...). Keep Translations and Game Mods. Use when crashing.",
-            "urls": {"🛠️ Run Fix": "ACTION_FIX_MODULES"}
-        },
-        {
-            "name": "WIPE Contents Folder (Extreme)", 
-            "desc": "WARNING: Delete entire atmosphere/contents folder. Will lose all Sysmods, Mods, Translations, and Cheats. Use for severe crashes.",
-            "urls": {"🔥 Wipe & Reset": "ACTION_FIX_DELETE_ALL_CONTENTS"}
-        },
-        {
-            "name": "Remove MacOS Junk (Fix Archive Bit)", 
-            "desc": "Scan and delete MacOS junk files (._file, .DS_Store). These often cause Hekate config errors.",
-            "urls": {"🛠️ Run Fix": "ACTION_FIX_MAC_JUNK"}
-        },
-        {
-            "name": "Delete All Cheats (Fix Game Crash)", 
-            "desc": "Delete all cheat files in contents. Use when game crashes immediately due to old cheat conflicts.",
-            "urls": {"🛠️ Run Fix": "ACTION_FIX_CHEATS"}
-        },
-        {
-            "name": "Other Errors (Source: Community)", 
-            "desc": "Lookup other common errors and detailed fixes on Community Wiki.",
-            "urls": {"🌍 View Guide": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap"}
-        }
-    ],
-    "📚 GUIDES (Source: Nintendo Switch Community)": [
-         {
-            "name": "Advanced Guides", 
-            "desc": "In-depth articles: Create EmuMMC, Incognito, Partition SD, Backup Nand...",
-            "urls": {"🌍 Open Web": "https://nsw.gitbook.io/guide/huong-dan-nang-cao"}
-        },
-        {
-            "name": "Basic Guides (For Beginners)", 
-            "desc": "Essential knowledge: Switch revisions, hacking terminology, basic usage guides for beginners.",
-            "urls": {"🌍 Open Web": "https://nsw.gitbook.io/guide/huong-dan-can-ban/"}
-        }
-    ],
-    "👾 GAME DOWNLOAD SOURCES": [
-        {
-            "name": "Switch Game Download Site",
-            "desc": "Large library of Switch games, updated frequently.",
-            "urls": {"Link": "https://rebrand.ly/tsufurom"}
-        }
+     "🚑 QUICK FIX (Common Issues)": [
+        {"name": "HARD RESET (WIPE & REINSTALL)", "desc": "Use when soft fixes fail. Wipes SD Card (keeps emuMMC) and reinstalls My Pack.", "urls": {"☢️ RUN RESET": "ACTION_FIX_HARD_RESET"}},
+        {"name": "Reinstall My Pack (Recommended)", "desc": "Best way to fix severe errors. System will guide you to download the standard hack pack to reinstall.", "urls": {"🛠️ Run Fix": "ACTION_FIX_REINSTALL_PACK"}},
+        {"name": "Remove Themes (Fix Black Screen)", "desc": "Delete theme folder (0100000000001000). Use when theme causes boot failure or black screen.", "urls": {"🛠️ Run Fix": "ACTION_FIX_THEMES"}},
+        {"name": "Remove Common Sysmodules", "desc": "Only delete background modules (Tesla, Emuiibo, SysDVR...). Keep Translations and Game Mods. Use when crashing.", "urls": {"🛠️ Run Fix": "ACTION_FIX_MODULES"}},
+        {"name": "WIPE Contents Folder (Extreme)", "desc": "WARNING: Delete entire atmosphere/contents folder. Will lose all Sysmods, Mods, Translations, and Cheats. Use for severe crashes.", "urls": {"🔥 Wipe & Reset": "ACTION_FIX_DELETE_ALL_CONTENTS"}},
+        {"name": "Remove MacOS Junk (Fix Archive Bit)", "desc": "Scan and delete MacOS junk files (._file, .DS_Store). These often cause Hekate config errors.", "urls": {"🛠️ Run Fix": "ACTION_FIX_MAC_JUNK"}},
+        {"name": "Delete All Cheats (Fix Game Crash)", "desc": "Delete all cheat files in contents. Use when game crashes immediately due to old cheat conflicts.", "urls": {"🛠️ Run Fix": "ACTION_FIX_CHEATS"}},
+        {"name": "Other Errors (Source: Community)", "desc": "Lookup other common errors and detailed fixes on Community Wiki.", "urls": {"🌍 View Guide": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap"}}
     ]
 }
+
+# FILL MISSING EN DATA WITH VI DATA
+for k, v in DATA_VI.items():
+    if k not in DATA_EN and k != "🚑 FIX LỖI NHANH (Sự cố thường gặp)":
+        DATA_EN[k] = v
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'Referer': 'https://gbatemp.net'
 }
 
-# --- CLASS TOOLTIP ---
+# --- TOOLTIP CLASS ---
 class ToolTip:
     def __init__(self, widget, text):
         self.widget = widget
@@ -714,7 +276,7 @@ class ToolTip:
 
         label = tk.Label(frame, text=self.text, justify='left',
                        background="#ffffe0", foreground="#333",
-                       font=("Segoe UI", 9), wraplength=400) # Tăng width cho tooltip dài
+                       font=("Segoe UI", 9), wraplength=400)
         label.pack(padx=5, pady=2)
 
     def hidetip(self):
@@ -726,61 +288,52 @@ class ToolTip:
 class SwitchToolApp:
     def __init__(self, root):
         self.root = root
-        self.lang_code = "VI" # Mặc định tiếng Việt
+        self.lang_code = "VI"
+        self.cancel_flag = False
         
-        # --- FIX ICON TASKBAR (PHẦN 2): Set Icon ngay khi init ---
         try:
             self.root.iconbitmap(resource_path("icon.ico"))
         except: pass
 
         self.setup_window()
         self.dest_path = tk.StringVar(value=os.getcwd())
+        self.is_mtp_mode = tk.BooleanVar(value=False)
         
         self.configure_styles()
         self.root.configure(bg=COLOR_BG)
         
-        self.is_app_ready = False # Cờ báo hiệu tải xong
-
-        # --- LOADING SCREEN ĐƯỢC GỌI Ở ĐÂY ---
+        self.is_app_ready = False 
         self.show_loading_screen()
-        # -------------------------------------
-
-    def center_window(self, width=1000, height=1000):
-        # Hàm căn giữa màn hình
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-        
-        x = int((screen_width / 2) - (width / 2))
-        y = int((screen_height / 2) - (height / 2))
-        
-        self.root.geometry(f'{width}x{height}+{x}+{y}')
 
     def setup_window(self):
-        # --- CẬP NHẬT GIAO DIỆN KHÔNG BỊ CHE ---
-        
-        # 1. Lấy kích thước màn hình
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
-        
-        # 2. Thiết lập kích thước App
-        app_width = 1100  # Chiều ngang cố định
-        # Chiều cao = Màn hình - 110px (Trừ hao thanh Taskbar + Thanh tiêu đề window)
+        app_width = 1100  
         app_height = screen_height - 110 
-        
-        # 3. Tính toán vị trí
-        # Căn giữa theo chiều ngang (X)
         x = int((screen_width / 2) - (app_width / 2))
-        # Đặt sát mép trên (Y = 0 hoặc 5) thay vì căn giữa để tránh bị đẩy xuống
         y = 5 
-        
-        # 4. Áp dụng kích thước
         self.root.geometry(f'{app_width}x{app_height}+{x}+{y}')
-        
         self.update_title()
 
     def update_title(self):
-        # Hiển thị luôn version trên tiêu đề
         self.root.title(f"{UI_TEXT[self.lang_code]['title']} (v{APP_VERSION})")
+    # Thêm hàm này vào trong class SwitchToolApp
+    def confirm_my_pack_download(self):
+        msg = (
+            "⚠️ LƯU Ý QUAN TRỌNG VỀ TƯƠNG THÍCH ⚠️\n\n"
+            "• Gói hack này hỗ trợ Firmware tối đa 21.1.0 và tương thích mọi FW hiện tại.\n"
+            "• TUY NHIÊN: Do chạy nhân Atmosphere mới nhất, một số Homebrew & Sysmodule cũ "
+            "(đặc biệt là Tinfoil) có thể KHÔNG HOẠT ĐỘNG.\n\n"
+            "💡 GIẢI PHÁP (Nếu bạn đang ở FW < 21.0.0 và cần dùng Tinfoil/App cũ):\n"
+            "1. Cài đặt My Pack này như bình thường.\n"
+            "2. Sau đó, tìm và cài đè thêm mục 'Atmosphere 1.9.5' ở bên dưới.\n"
+            "(Hoặc tải lẻ từng phần: Hekate + Sigpatches + Atmosphere 1.9.5 thay vì dùng My Pack).\n\n"
+            "Bạn có ĐÃ HIỂU và muốn tiếp tục tải về không?"
+        )
+        
+        # Hiện hộp thoại xác nhận (OK/Cancel)
+        if messagebox.askokcancel("Xác nhận tải My Pack", msg, icon='warning'):
+            webbrowser.open("https://rebrand.ly/mypack")
 
     def configure_styles(self):
         style = ttk.Style()
@@ -790,6 +343,7 @@ class SwitchToolApp:
         style.configure(".", background=COLOR_BG, foreground=COLOR_FG, font=FONT_NORMAL)
         style.configure("TLabel", background=COLOR_BG, foreground=COLOR_FG)
         style.configure("Card.TFrame", background=COLOR_CARD, relief="flat")
+        style.configure("TCheckbutton", background=COLOR_BG, foreground=COLOR_FG, font=FONT_SMALL)
         
         style.configure("Section.TLabel", 
                         font=FONT_HEADER, 
@@ -812,7 +366,6 @@ class SwitchToolApp:
         style.map("Accent.TButton", 
                   background=[('active', COLOR_ACCENT_HOVER), ('pressed', "#003e66")])
 
-        # Style cho nút Vàng (Atmosphere Recommended)
         style.configure("Gold.TButton", 
                         background=COLOR_GOLD, foreground="#333333", 
                         font=("Segoe UI", 9, "bold"), borderwidth=0)
@@ -834,17 +387,22 @@ class SwitchToolApp:
                         font=("Segoe UI", 9, "bold"), borderwidth=0)
         style.map("DownloadAll.TButton", background=[('active', "#45a049")])
         
+        style.configure("Danger.TButton", 
+                        background=COLOR_DANGER, foreground="white", 
+                        font=("Segoe UI", 9, "bold"), borderwidth=0)
+        style.map("Danger.TButton", 
+                  background=[('active', COLOR_DANGER_HOVER), ('pressed', "#a71d2a")])
+        
         style.configure("Lang.TButton", 
                         background="#555555", foreground="white", 
                         font=("Segoe UI", 8, "bold"), borderwidth=0)
 
-    # --- HÀM XỬ LÝ NGẦM (BACKGROUND THREAD) ---
+    # --- INIT TASKS ---
     def run_init_tasks(self):
         self.auto_detect_drive()
         try:
-            # [SỬA] Dùng resource_path để tìm logo
             load = Image.open(resource_path("logo.png"))
-            target_height = 140 # Giảm một chút cho gọn
+            target_height = 140 
             aspect_ratio = load.width / load.height
             target_width = int(target_height * aspect_ratio)
             self.preloaded_logo_image = load.resize((target_width, target_height), Image.Resampling.LANCZOS)
@@ -853,7 +411,7 @@ class SwitchToolApp:
         time.sleep(1.5) 
         self.is_app_ready = True
 
-    # --- HÀM LOADING SCREEN ---
+    # --- LOADING SCREEN ---
     def show_loading_screen(self):
         self.loading_frame = tk.Frame(self.root, bg=COLOR_BG)
         self.loading_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
@@ -863,7 +421,6 @@ class SwitchToolApp:
 
         self.loading_frames = [] 
         try:
-            # [SỬA] Dùng resource_path để tìm gif
             im = Image.open(resource_path("loading.gif"))
             for frame in ImageSequence.Iterator(im):
                 self.loading_frames.append(ImageTk.PhotoImage(frame.copy()))
@@ -879,9 +436,7 @@ class SwitchToolApp:
                  fg=COLOR_GOLD,                  
                  bg=COLOR_BG).pack(pady=(10, 0))
 
-        # [QUAN TRỌNG] Chạy init task trước
         threading.Thread(target=self.run_init_tasks, daemon=True).start()
-
         self.update_loading_animation(0)
 
     def update_loading_animation(self, frame_index):
@@ -892,7 +447,6 @@ class SwitchToolApp:
             self.finish_loading() 
             return
 
-        # Nếu có frame thì cập nhật ảnh, không có thì thôi
         if self.loading_frames:
             self.loading_label.config(image=self.loading_frames[frame_index])
             next_index = (frame_index + 1) % len(self.loading_frames)
@@ -933,64 +487,21 @@ class SwitchToolApp:
         text_area.pack(fill="both", expand=True, padx=10, pady=5)
 
         guide_content = """
-*** PHẦN TIẾNG VIỆT ***
-
-1. CHUẨN BỊ:
-   - Kết nối thẻ nhớ Switch tới máy tính
-    + Cách 1: Cắm thẻ nhớ Switch vào máy tính hoặc qua đầu đọc thẻ.
-    + Cách 2: Kết nối Switch qua dây USB Type C thông qua Hekate. Để vào Hekate, bạn cần tắt nguồn Switch hoàn toàn, rồi mở nguồn lên lại (hoặc giữ nút giảm âm lượng khi mở), sau đó vào Tools>Usb Tools>SD card, tiếp theo thực hiện cắm dây USB Type C
-   Lưu ý 1: Nếu bạn dùng Hekate USB Tools, hãy Eject thẻ nhớ ra khỏi máy trước khi ngắt kết nối cáp USB.
-   Lưu ý 2: MTP Responder (DBI) chỉ nên dùng để tải ứng dụng/game, KHÔNG NÊN dùng để cài file hack hệ thống (Atmosphere, Hekate) vì có thể gây lỗi.
-   - Tại mục "Chọn thư mục điểm đến", bấm "Chọn" để trỏ đến ổ đĩa thẻ nhớ của bạn.
-   - Nếu không biết ổ nào, bấm "Auto 🔄" để phần mềm quét giúp bạn.
-   - Nếu có thắc mắc gì về bất cứ tính năng nào, hãy trỏ chuột vào biểu tượng dấu chấm hỏi (?) để xem hướng dẫn nhanh.
-
-2. CÁCH TẢI VÀ CÀI ĐẶT:
-   - Danh sách được chia thành các nhóm: File Hack, Sysmod, Homebrew...
-   - Nút XANH (⚡ Tự động cài): Phần mềm sẽ tự tải file về và giải nén thẳng vào thẻ nhớ. Bạn không cần làm gì thêm.
-   - Nút VÀNG (Atmosphere): Bản ổn định khuyến nghị dùng.
-   - Nút XÁM (Web/Link): Sẽ mở trình duyệt web để bạn đọc hướng dẫn hoặc tải thủ công.
-   - Nút MŨI TÊN XANH (⬇️ Tải tất cả): Tự động tải lần lượt mọi thứ trong danh mục đó.
-
-3. SỬA LỖI (FIX):
-   - Nếu máy gặp lỗi (màn hình đen, crash game...), hãy kéo xuống mục "FIX LỖI NHANH".
-   - Bấm vào các nút Fix tương ứng để phần mềm tự động sửa file lỗi trên thẻ nhớ.
-
-------------------------------------------------
-
-*** ENGLISH SECTION ***
-
-1. PREPARATION:
-   - Insert your Switch SD card into PC (or connect via USB).
-   - Click "Browse" to select your SD card drive.
-   - Click "Auto Detect" if you are unsure which drive it is.
-   - NOTE: Do NOT use DBI MTP Responder for installing Core Hack files (Atmosphere). Use it only for Homebrew/Games.
-
-2. HOW TO INSTALL:
-   - Apps are categorized into: Hack Files, Sysmods, Homebrew...
-   - BLUE Button (⚡ Auto Install): The tool automatically downloads and extracts files to your SD card. No extra steps needed.
-   - GOLD Button: Recommended stable version.
-   - GREY Button (Web/Link): Opens a web browser for instructions or manual download sources.
-   - DOWN ARROW Button (⬇️ Download All): Automatically downloads everything in that category one by one.
-
-3. TROUBLESHOOTING (FIX):
-   - If you face issues (black screen, crashes...), scroll down to "QUICK FIX".
-   - Click the corresponding Fix buttons to let the tool repair files on your SD card automatically.
+Please refer to the online guide or tooltips for detailed instructions.
 """
         text_area.insert(tk.END, guide_content)
         text_area.config(state=tk.DISABLED) 
 
     def setup_ui(self):
         text_db = UI_TEXT[self.lang_code]
-        data_db = DATA_VI if self.lang_code == "VI" else DATA_EN
+        if self.lang_code == "VI":
+            data_db = DATA_VI
+        else:
+            data_db = DATA_EN
 
-        # =========================================================================
-        # 1. HEADER (TITLE & BUTTONS)
-        # =========================================================================
         top_frame = tk.Frame(self.root, bg=COLOR_BG, pady=10, padx=20)
         top_frame.pack(fill="x", side="top")
         
-        # Left Info (Title & Credits)
         left_info = tk.Frame(top_frame, bg=COLOR_BG)
         left_info.pack(side="left", fill="both", expand=True)
 
@@ -1003,16 +514,19 @@ class SwitchToolApp:
         lbl_credit_2 = tk.Label(left_info, text=text_db["credit2"],
                                 font=("Segoe UI", 9, "italic"), bg=COLOR_BG, fg="#dddddd", justify="left")
         lbl_credit_2.pack(side="top", anchor="w", pady=(2, 0))
+        # --- THÊM MỚI: HIỂN THỊ THÔNG TIN PHIÊN BẢN ---
+        ver_info_text = "✨ Update 1.0.3 (25/12/2024): Hekate v6.4.2 | Atmosphere 1.10.1 | Sigpatches v1.10.1p"
+        lbl_version_info = tk.Label(left_info, text=ver_info_text,
+                                    font=("Segoe UI", 9, "bold"), bg=COLOR_BG, fg=COLOR_SUCCESS, justify="left")
+        lbl_version_info.pack(side="top", anchor="w", pady=(5, 0))
+        # -----------------------------------------------
 
-        # Right Info (Buttons & Logo)
         right_info = tk.Frame(top_frame, bg=COLOR_BG)
         right_info.pack(side="right", anchor="ne", fill="y")
         
-        # Frame chứa nút bấm
         btn_container = tk.Frame(right_info, bg=COLOR_BG)
         btn_container.pack(side="top", anchor="e")
 
-        # Nút Donate (Vàng) & Update nằm cạnh nhau hoặc trên dưới gọn gàng
         btn_update_soft = ttk.Button(btn_container, text=text_db["btn_update_soft"], style="TButton",
                                      command=self.check_for_updates)
         btn_update_soft.pack(side="top", anchor="e", pady=2, fill="x")
@@ -1022,7 +536,6 @@ class SwitchToolApp:
                                       command=lambda: webbrowser.open("https://tsufu.gitbook.io/donate/"))
         btn_donate_header.pack(side="top", anchor="e", pady=2, fill="x")
 
-        # Các nút phụ
         sub_btn_frame = tk.Frame(btn_container, bg=COLOR_BG)
         sub_btn_frame.pack(side="top", anchor="e", pady=2)
 
@@ -1034,7 +547,6 @@ class SwitchToolApp:
         btn_lang = ttk.Button(sub_btn_frame, text=lang_text, style="Lang.TButton", width=12, command=self.toggle_language)
         btn_lang.pack(side="right", padx=2)
 
-        # LOGO IMAGE
         try:
             if hasattr(self, 'preloaded_logo_image') and self.preloaded_logo_image:
                  self.logo_img = ImageTk.PhotoImage(self.preloaded_logo_image)
@@ -1048,17 +560,12 @@ class SwitchToolApp:
 
             self.logo_label = tk.Label(right_info, image=self.logo_img, bg=COLOR_BG, bd=0)
             self.logo_label.pack(side="top", anchor="e", pady=5)
-            
         except Exception as e:
             pass
 
-        # =========================================================================
-        # 2. PATH SELECTION ROW
-        # =========================================================================
         path_frame = tk.Frame(self.root, bg=COLOR_BG, pady=5, padx=20)
         path_frame.pack(fill="x", side="top") 
         
-        # [CẬP NHẬT] Thêm Tooltip dấu chấm hỏi và sửa label
         path_lbl_container = tk.Frame(path_frame, bg=COLOR_BG)
         path_lbl_container.pack(side="left")
 
@@ -1074,10 +581,19 @@ class SwitchToolApp:
         ttk.Button(path_frame, text=text_db["btn_browse"], command=self.browse_folder).pack(side="left", padx=2)
         ttk.Button(path_frame, text=text_db["btn_detect"], command=lambda: threading.Thread(target=self.auto_detect_drive, daemon=True).start()).pack(side="left", padx=2)
         ttk.Button(path_frame, text=text_db["btn_open"], command=self.open_root_folder).pack(side="left", padx=2)
+        
+        mtp_frame = tk.Frame(self.root, bg=COLOR_BG, padx=20)
+        mtp_frame.pack(fill="x", side="top")
+        
+        def on_mtp_check():
+            if self.is_mtp_mode.get():
+                messagebox.showwarning("MTP Warning", text_db["msg_mtp_alert"])
+                self.browse_folder()
+        
+        chk_mtp = ttk.Checkbutton(mtp_frame, text=text_db["chk_mtp_label"], variable=self.is_mtp_mode, 
+                                  command=on_mtp_check, style="TCheckbutton")
+        chk_mtp.pack(side="left")
 
-        # =========================================================================
-        # 3. MAIN SCROLLABLE AREA
-        # =========================================================================
         container = tk.Frame(self.root, bg=COLOR_BG)
         container.pack(fill="both", expand=True, padx=10, pady=(5, 0))
         
@@ -1095,7 +611,6 @@ class SwitchToolApp:
         self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # RENDER DATA
         categories = data_db.keys()
         
         for cat in categories:
@@ -1115,9 +630,6 @@ class SwitchToolApp:
             for item in items:
                 self.create_item_card(self.scroll_frame, item)
 
-        # =========================================================================
-        # 4. FOOTER
-        # =========================================================================
         bot = tk.Frame(self.root, bg=COLOR_CARD, pady=10, padx=20)
         bot.pack(fill="x", side="bottom")
         
@@ -1132,6 +644,10 @@ class SwitchToolApp:
         
         self.status_label = tk.Label(info_line, text=text_db["status_ready"], bg=COLOR_CARD, fg=COLOR_ACCENT, font=("Segoe UI", 12, "bold"))
         self.status_label.pack(side="left")
+
+        btn_cancel = ttk.Button(info_line, text=text_db.get("btn_cancel", "Cancel"), style="Danger.TButton", 
+                                command=self.cancel_download)
+        btn_cancel.pack(side="left", padx=10)
         
         btn_bug_report = tk.Button(info_line, text="🐞 Góp ý & báo lỗi (Bug&Report)", 
                                    font=("Segoe UI", 9, "bold"), 
@@ -1141,7 +657,6 @@ class SwitchToolApp:
                                    command=lambda: webbrowser.open("https://rebrand.ly/bugrp"))
         btn_bug_report.pack(side="right")
 
-    # --- AUTO UPDATE LOGIC ---
     def check_for_updates(self):
         threading.Thread(target=self._process_check_update, daemon=True).start()
 
@@ -1193,21 +708,24 @@ class SwitchToolApp:
             current_exe = sys.executable
             bat_script = f"""
 @echo off
-timeout /t 2 /nobreak
-del "{current_exe}"
-ren "{new_exe_name}" "{os.path.basename(current_exe)}"
-start "" "{os.path.basename(current_exe)}"
+timeout /t 3 /nobreak
+move /y "{current_exe}" "{current_exe}.old"
+move /y "{new_exe_name}" "{current_exe}"
+start "" "{current_exe}"
 del "%~f0"
 """
             with open("update_script.bat", "w") as bat:
                 bat.write(bat_script)
-            messagebox.showinfo("Update", "Phần mềm sẽ khởi động lại để hoàn tất cập nhật.")
+            
+            text_db = UI_TEXT[self.lang_code]
+            messagebox.showinfo("Update", text_db.get("msg_update_manual", "Restarting..."))
             subprocess.Popen("update_script.bat", shell=True)
             self.root.quit()
         except Exception as e:
-            messagebox.showerror("Update Error", f"Lỗi cập nhật: {e}")
+            text_db = UI_TEXT[self.lang_code]
+            full_msg = f"Lỗi cập nhật: {e}\n\n{text_db['msg_update_virus']}"
+            messagebox.showerror("Update Error", full_msg)
 
-    # --- CÁC HÀM TẠO UI ---
     def create_item_card(self, parent, item):
         card = ttk.Frame(parent, style="Card.TFrame", padding=10)
         card.pack(fill="x", pady=4, padx=10)
@@ -1215,7 +733,11 @@ del "%~f0"
         name_frame = tk.Frame(card, bg=COLOR_CARD)
         name_frame.pack(side="left", fill="x", expand=True)
         
-        lbl_name = tk.Label(name_frame, text=item["name"], font=FONT_TITLE, bg=COLOR_CARD, fg="white", anchor="w")
+        label_fg = "white"
+        if "HARD RESET" in item["name"].upper():
+            label_fg = COLOR_DANGER
+            
+        lbl_name = tk.Label(name_frame, text=item["name"], font=FONT_TITLE, bg=COLOR_CARD, fg=label_fg, anchor="w")
         lbl_name.pack(side="left")
         
         lbl_info = tk.Label(name_frame, text="❓", font=("Segoe UI", 10), bg=COLOR_CARD, fg=COLOR_INFO, cursor="hand2")
@@ -1246,10 +768,8 @@ del "%~f0"
                 cmd = lambda n=item["name"]: self.install_local_zip_generic(n)
             elif url == "ACTION_AMS_195":
                 cmd = self.install_ams_195_logic
-            # --- LOGIC COMBO MỚI ---
             elif url == "THEME_COMBO_ACTION":
                 cmd = self.install_theme_combo
-            # -----------------------
             elif url.startswith("ACTION_SAVE_PC|"):
                 actual_url = url.split("|")[1]
                 cmd = lambda u=actual_url: self.download_pc_file_generic(u)
@@ -1258,6 +778,8 @@ del "%~f0"
                 cmd = lambda u=actual_url, n=item["name"]: self.process_run_pc(u, n)
             elif url.startswith("ACTION_FIX_"):
                 cmd = lambda u=url: self.run_fix_task(u)
+            elif url == "ACTION_MY_PACK_WARN":
+                cmd = self.confirm_my_pack_download
             else: 
                 cmd = lambda u=url, n=item["name"], l=lbl: self.process_action(u, n, l)
 
@@ -1267,33 +789,41 @@ del "%~f0"
             if "Bước 1" in lbl or "Step 1" in lbl:
                  is_web = True
 
-            if not is_web:
-                if "Fix" in url: 
-                    display_text = lbl
-                    btn_style = "Accent.TButton" 
-                elif url == "ACTION_AMS_195":
-                    display_text = "✨ " + lbl
-                    btn_style = "Gold.TButton"
-                # --- SỬA LOGIC HIỂN THỊ NÚT COMBO THEME ---
-                elif url == "THEME_COMBO_ACTION":
-                    display_text = "⚡ " + lbl  # Thêm icon tia sét
-                    btn_style = "Accent.TButton" # Ép kiểu nút Xanh dương
-                # ------------------------------------------
-                elif "Tự động" in lbl or "Auto" in lbl or "Tải" in lbl or "Download" in lbl or "Chọn" in lbl or "Pick" in lbl:
-                    display_text = "⚡ " + lbl
-                    btn_style = "Accent.TButton"
-                else:
-                    btn_style = "TButton"
-            elif "Bước 1" in lbl or "Step 1" in lbl:
-                display_text = "⬇️ " + lbl
+            btn_width = None
+            if "Fix" in url: 
+                display_text = lbl
+            
+            if url == "ACTION_FIX_HARD_RESET":
+                 btn_style = "Danger.TButton"
+            elif "Fix" in url:
+                 btn_style = "Accent.TButton"
+            elif url == "ACTION_AMS_195":
+                display_text = "✨ " + lbl
+                btn_style = "Gold.TButton"
+            elif url == "THEME_COMBO_ACTION":
+                display_text = "⚡ " + lbl
+                btn_style = "Accent.TButton"
+            elif "Tự động" in lbl or "Auto" in lbl or "Tải" in lbl or "Download" in lbl or "Chọn" in lbl or "Pick" in lbl:
+                display_text = "⚡ " + lbl
                 btn_style = "Accent.TButton"
             else:
+                btn_style = "TButton"
+            
+            if "Bước 1" in lbl or "Step 1" in lbl:
+                display_text = "⬇️ " + lbl
+                btn_style = "Accent.TButton"
+            elif is_web:
                 btn_style = "Web.TButton"
                 has_manual_web_link = True 
 
-            ttk.Button(btn_box, text=display_text, style=btn_style, command=cmd).pack(side="left", padx=2)
+            btn = ttk.Button(btn_box, text=display_text, style=btn_style, command=cmd)
+            padx_val = 2
+            if "Fix" in url: padx_val = 5
+                
+            btn.pack(side="left", padx=padx_val)
+            if "HARD RESET" in lbl:
+                ToolTip(btn, UI_TEXT[self.lang_code]["tip_hard_reset"])
 
-        # TỰ ĐỘNG THÊM NÚT "MỞ TRANG DOWNLOAD"
         detected_source_url = None
         for u in item["urls"].values():
             if "github.com" in u and "/releases/download/" in u:
@@ -1314,47 +844,34 @@ del "%~f0"
                 ttk.Button(btn_box, text=txt_dl_page, style="Web.TButton", 
                            command=lambda u=detected_source_url: webbrowser.open(u)).pack(side="left", padx=2)
        
-
-    # --- [HÀM MỚI] XỬ LÝ NÚT ATMOSPHERE 1.9.5 ---
     def install_ams_195_logic(self):
         text_db = UI_TEXT[self.lang_code]
-        
-        # Tạo cửa sổ Dialog tùy chỉnh để có nút Hướng dẫn
         dialog = tk.Toplevel(self.root)
         dialog.title(text_db["ams_195_title"])
         dialog.geometry("600x550")
         dialog.configure(bg=COLOR_CARD)
-        
-        # Căn giữa dialog
         x = self.root.winfo_x() + (self.root.winfo_width()//2) - 300
         y = self.root.winfo_y() + (self.root.winfo_height()//2) - 275
         dialog.geometry(f"+{x}+{y}")
         
-        # Tiêu đề
         tk.Label(dialog, text="⚠️ ATTENTION / CHÚ Ý", font=("Segoe UI", 14, "bold"), fg=COLOR_GOLD, bg=COLOR_CARD).pack(pady=10)
-        
-        # Nội dung (Scrolled Text để hiển thị đầy đủ)
         msg_frame = tk.Frame(dialog, bg=COLOR_CARD, padx=10)
         msg_frame.pack(fill="both", expand=True)
-        
         st = scrolledtext.ScrolledText(msg_frame, height=18, font=("Segoe UI", 10), bg="#1e1e1e", fg="white", relief="flat")
         st.pack(fill="both", expand=True)
         st.insert(tk.END, text_db["ams_195_msg"])
         st.config(state=tk.DISABLED)
         
-        # Nút Hướng Dẫn Maintenance
-        guide_url = "https://nsw.gitbook.io/guide/cac-loi-thuong-gap/xoa-thong-bao-update-firmware" # Link gốc như yêu cầu
+        guide_url = "https://nsw.gitbook.io/guide/cac-loi-thuong-gap/xoa-thong-bao-update-firmware"
         btn_guide = ttk.Button(dialog, text=text_db["btn_maintenance_guide"], style="TButton", 
                                command=lambda: webbrowser.open(guide_url))
         btn_guide.pack(pady=10)
         
-        # Frame nút OK/Cancel
         btn_frame = tk.Frame(dialog, bg=COLOR_CARD, pady=10)
         btn_frame.pack(fill="x", side="bottom")
         
         def on_confirm():
             dialog.destroy()
-            # Link tải Atmosphere 1.9.5
             url = "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.9.5/atmosphere-1.9.5-master-de9b02007+hbl-2.4.4+hbmenu-3.6.0.zip"
             threading.Thread(target=self.download_task, args=("Atmosphere 1.9.5", url), daemon=True).start()
             
@@ -1364,14 +881,10 @@ del "%~f0"
         ttk.Button(btn_frame, text="✅ OK, Download & Install", style="Accent.TButton", command=on_confirm).pack(side="right", padx=20)
         ttk.Button(btn_frame, text="❌ Cancel", style="TButton", command=on_cancel).pack(side="right", padx=10)
 
-    # --- [SỬA ĐỔI] HÀM BROWSE FOLDER VỚI CẢNH BÁO MTP ---
     def browse_folder(self):
         d = filedialog.askdirectory()
         if d: 
             self.dest_path.set(d)
-            # Hiện cảnh báo MTP nếu người dùng chọn thư mục (có thể là DBI)
-            text_db = UI_TEXT[self.lang_code]
-            messagebox.showwarning("MTP Responder Warning", text_db["msg_mtp_warning"])
 
     def download_category_all(self, category_name):
         data_db = DATA_VI if self.lang_code == "VI" else DATA_EN
@@ -1383,42 +896,55 @@ del "%~f0"
         if not messagebox.askyesno("Confirm", msg):
             return
 
+        self.cancel_flag = False
         threading.Thread(target=self.process_download_all, args=(items,), daemon=True).start()
+
+    def cancel_download(self):
+        self.cancel_flag = True
+        self.status_label.config(text=UI_TEXT[self.lang_code]["msg_cancelled"], fg=COLOR_WARNING)
 
     def process_download_all(self, items):
         count = 0
         for item in items:
+            if self.cancel_flag: break
             for label, url in item["urls"].items():
+                if self.cancel_flag: break
+                
                 if "PC" in label or "Client" in label or "Web" in label or "Guide" in label or "Link" in label or "Hướng dẫn" in label:
                     continue
-                # Bỏ qua các bước thủ công
                 if "Bước 1" in label or "Step 1" in label or "Bước 2" in label or "Step 2" in label:
                     continue
-
                 if "ACTION_SAVE_PC" in url or "ACTION_PICK_ZIP" in url or "ACTION_FIX" in url:
                     continue
-                
-                # Bỏ qua nút Atmosphere đặc biệt khi tải tất cả để tránh hiện popup liên tục
                 if "ACTION_AMS_195" in url:
+                    continue
+                
+                if url == "THEME_COMBO_ACTION":
+                    self.root.after(0, lambda: self.status_label.config(text=f"Auto: Theme Combo...", fg=COLOR_INFO))
+                    self.run_theme_combo_thread(self.dest_path.get(), is_batch=True)
+                    count += 1
+                    time.sleep(1)
                     continue
 
                 if url == "TESLA_ACTION":
                     self.root.after(0, lambda: self.status_label.config(text=f"Auto: Tesla Combo...", fg=COLOR_INFO))
-                    self.run_tesla_thread(self.dest_path.get())
+                    self.run_tesla_thread(self.dest_path.get(), is_batch=True)
                     count += 1
                     continue
                 elif url == "ULTRAHAND_ACTION":
                     self.root.after(0, lambda: self.status_label.config(text=f"Auto: Ultrahand Combo...", fg=COLOR_INFO))
-                    self.run_ultrahand_thread(self.dest_path.get())
+                    self.run_ultrahand_thread(self.dest_path.get(), is_batch=True)
                     count += 1
                     continue
                 
-                self.download_task(item["name"], url, silent_success=False)
+                self.download_task(item["name"], url, silent_success=False, is_batch=True)
                 count += 1
-                import time
                 time.sleep(1)
 
-        self.root.after(0, lambda: messagebox.showinfo("Done", f"Started {count} tasks."))
+        if not self.cancel_flag:
+            self.root.after(0, lambda: messagebox.showinfo("Done", f"Finished {count} tasks."))
+        else:
+            self.root.after(0, lambda: messagebox.showinfo("Cancelled", "Download queue cancelled."))
 
     def _on_mousewheel(self, event):
         self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
@@ -1426,15 +952,31 @@ del "%~f0"
     def auto_detect_drive(self):
         text_db = UI_TEXT[self.lang_code]
         found_drive = None
+        
         if sys.platform == 'win32':
-            drives = [f"{chr(x)}:\\" for x in range(68, 91) if os.path.exists(f"{chr(x)}:\\")]
-            for drive in drives:
-                try:
-                    dtype = ctypes.windll.kernel32.GetDriveTypeW(drive)
-                    if dtype == 2: 
-                        found_drive = drive
-                        break
-                except: pass
+            letters = "EFGHIJKLMNOPQRSTUVWXYZ" # Skip C, D
+            for letter in letters:
+                drive = f"{letter}:\\"
+                if os.path.exists(drive):
+                    try:
+                        dtype = ctypes.windll.kernel32.GetDriveTypeW(drive)
+                        if dtype == 2: # Removable
+                            vol_name_buf = ctypes.create_unicode_buffer(1024)
+                            ctypes.windll.kernel32.GetVolumeInformationW(
+                                ctypes.c_wchar_p(drive),
+                                vol_name_buf,
+                                ctypes.sizeof(vol_name_buf),
+                                None, None, None, None, 0
+                            )
+                            vol_label = vol_name_buf.value.upper()
+                            
+                            if any(k in vol_label for k in ["SWITCH", "SD", "NO NAME", "HEKATE", "BOOT", "ATMOSPHERE"]):
+                                found_drive = drive
+                                break
+                            
+                            if not found_drive: 
+                                found_drive = drive
+                    except: pass
         
         if found_drive:
             self.root.after(0, lambda: self.dest_path.set(found_drive))
@@ -1460,6 +1002,7 @@ del "%~f0"
         )
         
         if save_path:
+            self.cancel_flag = False
             threading.Thread(target=self.download_task, args=("File PC", url), kwargs={'custom_save_path': save_path}, daemon=True).start()
 
     def process_run_pc(self, url, name):
@@ -1468,6 +1011,7 @@ del "%~f0"
         filename = "TegraRcmGUI_Installer.msi" 
         temp_dir = os.environ.get('TEMP', os.getcwd())
         save_path = os.path.join(temp_dir, filename)
+        self.cancel_flag = False
         threading.Thread(target=self.download_task, 
                          args=(name, url), 
                          kwargs={'custom_save_path': save_path, 'auto_run': True}, 
@@ -1500,46 +1044,48 @@ del "%~f0"
                     webbrowser.open(url)
                     return
         
+        self.cancel_flag = False
         threading.Thread(target=self.download_task, args=(name, url), daemon=True).start()
 
     def install_tesla_combo(self):
         root_path = self.dest_path.get()
+        self.cancel_flag = False
         threading.Thread(target=self.run_tesla_thread, args=(root_path,), daemon=True).start()
 
-    def run_tesla_thread(self, root_path):
+    def run_tesla_thread(self, root_path, is_batch=False):
         url1 = "https://github.com/ppkantorski/nx-ovlloader/releases/download/v2.0.0/nx-ovlloader+.zip"
-        self.download_task("Tesla Loader", url1, silent_success=True)
+        self.download_task("Tesla Loader", url1, silent_success=True, is_batch=is_batch)
         url2 = "https://github.com/WerWolv/Tesla-Menu/releases/download/v1.2.3/ovlmenu.zip"
-        self.download_task("Tesla Menu UI", url2)
+        self.download_task("Tesla Menu UI", url2, is_batch=is_batch)
 
     def install_ultrahand_combo(self):
         root_path = self.dest_path.get()
+        self.cancel_flag = False
         threading.Thread(target=self.run_ultrahand_thread, args=(root_path,), daemon=True).start()
 
-    def run_ultrahand_thread(self, root_path):
+    def run_ultrahand_thread(self, root_path, is_batch=False):
         url1 = "https://github.com/ppkantorski/nx-ovlloader/releases/download/v2.0.0/nx-ovlloader+.zip"
-        self.download_task("Ultrahand Loader", url1, silent_success=True)
+        self.download_task("Ultrahand Loader", url1, silent_success=True, is_batch=is_batch)
         url2 = "https://github.com/ppkantorski/Ultrahand-Overlay/releases/latest/download/ovlmenu.ovl"
-        self.download_task("Ultrahand Overlay", url2)
-    # --- [NEW] LOGIC COMBO THEME ---
+        self.download_task("Ultrahand Overlay", url2, is_batch=is_batch)
+
     def install_theme_combo(self):
         root_path = self.dest_path.get()
+        self.cancel_flag = False
         threading.Thread(target=self.run_theme_combo_thread, args=(root_path,), daemon=True).start()
 
-    def run_theme_combo_thread(self, root_path):
-        # App 1: NXThemes Installer
+    def run_theme_combo_thread(self, root_path, is_batch=False):
         url1 = "https://github.com/exelix11/SwitchThemeInjector/releases/download/v4.8.3/NXThemesInstaller.nro"
-        self.download_task("NXThemes Installer", url1, silent_success=True)
-        
-        # App 2: Themezer-NX (như link bạn cung cấp)
+        self.download_task("NXThemes Installer", url1, silent_success=True, is_batch=is_batch)
         url2 = "https://github.com/suchmememanyskill/themezer-nx/releases/download/2.0.3/themezer-nx.nro"
-        self.download_task("Themezer-NX", url2)
+        self.download_task("Themezer-NX", url2, is_batch=is_batch)
 
-    def download_task(self, name, url, silent_success=False, custom_save_path=None, auto_run=False):
+    def download_task(self, name, url, silent_success=False, custom_save_path=None, auto_run=False, is_batch=False):
         try:
             if custom_save_path:
                 save_path = custom_save_path
             else:
+                # Always download to dest_path (which is either SD Root or Temp Folder based on selection)
                 root_path = self.dest_path.get()
                 if not os.path.exists(root_path): os.makedirs(root_path)
 
@@ -1551,11 +1097,6 @@ del "%~f0"
                     self.root.after(0, lambda: messagebox.showinfo("Info", f"Server blocked auto-download.\nOpening browser..."))
                     webbrowser.open(url)
                     return
-                content_type = r.headers.get('content-type', '')
-                if 'text/html' in content_type:
-                      self.root.after(0, lambda: messagebox.showinfo("Info", f"Browser verification required.\nOpening browser..."))
-                      webbrowser.open(url)
-                      return
                 r.raise_for_status()
             except Exception as e:
                 self.root.after(0, lambda: messagebox.showinfo("Net Error", f"Cannot download.\nOpening browser..."))
@@ -1578,7 +1119,6 @@ del "%~f0"
                 is_zip = filename.lower().endswith(".zip")
                 is_nro = filename.lower().endswith(".nro")
                 is_ovl = filename.lower().endswith(".ovl")
-                is_7z = filename.lower().endswith(".7z")
 
                 if is_nro: save_path = os.path.join(root_path, "switch", filename)
                 elif is_ovl: save_path = os.path.join(root_path, "switch", ".overlays", filename)
@@ -1588,13 +1128,17 @@ del "%~f0"
                 if not os.path.exists(os.path.dirname(save_path)): os.makedirs(os.path.dirname(save_path))
             else:
                 is_zip = save_path.lower().endswith(".zip")
-                is_7z = save_path.lower().endswith(".7z")
-                is_nro = False; is_ovl = False
                 root_path = os.path.dirname(save_path)
 
             downloaded = 0
             with open(save_path, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=8192):
+                    if self.cancel_flag:
+                        f.close()
+                        try: os.remove(save_path)
+                        except: pass
+                        self.root.after(0, lambda: self.status_label.config(text="Cancelled", fg=COLOR_WARNING))
+                        return
                     f.write(chunk)
                     downloaded += len(chunk)
                     if total_size > 0:
@@ -1604,11 +1148,11 @@ del "%~f0"
             if custom_save_path:
                 msg = f"Downloaded: {os.path.basename(save_path)}"
                 if auto_run:
-                    self.root.after(0, lambda: self.status_label.config(text=f"Đang mở trình cài đặt...", fg=COLOR_SUCCESS))
+                    self.root.after(0, lambda: self.status_label.config(text=f"Opening installer...", fg=COLOR_SUCCESS))
                     try:
                         os.startfile(save_path)
                     except Exception as e:
-                        self.root.after(0, lambda: messagebox.showerror("Lỗi", f"Không thể mở file: {e}"))
+                        self.root.after(0, lambda: messagebox.showerror("Error", f"Cannot open: {e}"))
             elif is_zip:
                 if "emuiibo" in name.lower():
                     self.root.after(0, lambda: self.status_label.config(text=f"Installing emuiibo...", fg=COLOR_WARNING))
@@ -1635,16 +1179,18 @@ del "%~f0"
                     except zipfile.BadZipFile:
                         webbrowser.open(url)
                         return
-            elif is_ovl: msg = f"Overlay Installed: {os.path.basename(save_path)}"
-            elif is_nro: msg = f"Copied to /switch/: {os.path.basename(save_path)}"
             else: msg = f"Downloaded {os.path.basename(save_path)}."
 
-            if not silent_success:
-                self.root.after(0, lambda: self.status_label.config(text=f"Success: {name}", fg=COLOR_SUCCESS))
+            self.root.after(0, lambda: self.status_label.config(text=f"Success: {name}", fg=COLOR_SUCCESS))
+            
+            if not is_batch and not silent_success:
+                 success_msg = UI_TEXT[self.lang_code]["msg_dl_success"] + name
+                 self.root.after(0, lambda: messagebox.showinfo("Success", success_msg))
 
         except Exception as e:
-            self.root.after(0, lambda: self.status_label.config(text="Error!", fg="red"))
-            messagebox.showerror("Error", f"Detail: {str(e)}")
+            if not self.cancel_flag:
+                self.root.after(0, lambda: self.status_label.config(text="Error!", fg="red"))
+                messagebox.showerror("Error", f"Detail: {str(e)}")
 
     def install_local_zip_generic(self, label_name):
         root_path = self.dest_path.get()
@@ -1693,7 +1239,7 @@ del "%~f0"
                         except: pass
 
             if not extracted_ok:
-                raise Exception("Không thể giải nén. Vui lòng cài đặt WinRAR hoặc 7-Zip trên máy tính!")
+                raise Exception("Cannot extract. Please install WinRAR or 7-Zip!")
 
             self.root.after(0, lambda: self.status_label.config(text=f"Done {label}", fg=COLOR_SUCCESS))
             
@@ -1724,7 +1270,7 @@ del "%~f0"
             os.makedirs(temp_inner)
 
             if not self.helper_extract_any(source_file, temp_outer):
-                 raise Exception("Không thể giải nén file mẹ. Cần WinRAR/7Zip.")
+                 raise Exception("Cannot extract outer archive.")
 
             inner_archive = None
             for root, dirs, files in os.walk(temp_outer):
@@ -1735,10 +1281,10 @@ del "%~f0"
                 if inner_archive: break
             
             if not inner_archive:
-                raise Exception("Không tìm thấy file nén con (linkalho-v...zip/rar/7z) bên trong.")
+                raise Exception("Inner Linkalho archive not found.")
 
             if not self.helper_extract_any(inner_archive, temp_inner):
-                 raise Exception("Không thể giải nén file con bên trong.")
+                 raise Exception("Cannot extract inner archive.")
 
             nro_found = False
             switch_dir = os.path.join(root_path, "switch")
@@ -1758,9 +1304,9 @@ del "%~f0"
 
             if nro_found:
                 self.root.after(0, lambda: self.status_label.config(text="Installed Linkalho!", fg=COLOR_SUCCESS))
-                messagebox.showinfo("Success", "Đã cài đặt xong Linkalho (.nro) vào thư mục switch.")
+                messagebox.showinfo("Success", "Installed Linkalho (.nro) to /switch/ folder.")
             else:
-                raise Exception("Không tìm thấy file .nro nào sau khi giải nén.")
+                raise Exception("No .nro file found.")
 
         except Exception as e:
             self.root.after(0, lambda: self.status_label.config(text="Error", fg="red"))
@@ -1799,7 +1345,7 @@ del "%~f0"
         if not os.path.exists(root_path): return messagebox.showwarning("Warning", "Select Root first!")
         
         win = tk.Toplevel(self.root)
-        win.title("Chọn nguồn cài đặt")
+        win.title("Install Translation")
         
         win.geometry("500x220") 
         win.configure(bg=COLOR_CARD)
@@ -1808,9 +1354,9 @@ del "%~f0"
         y = self.root.winfo_y() + (self.root.winfo_height()//2) - 110
         win.geometry(f"+{x}+{y}")
 
-        tk.Label(win, text="Bạn muốn chọn File Nén hay Thư Mục?", bg=COLOR_CARD, fg="white", font=("Segoe UI", 11)).pack(pady=(20, 5))
+        tk.Label(win, text="Select Archive or Folder?", bg=COLOR_CARD, fg="white", font=("Segoe UI", 11)).pack(pady=(20, 5))
         
-        tk.Label(win, text="(Hệ thống sẽ tự nhận diện ra file việt hóa trong thư mục để chép vào thẻ nhớ)", 
+        tk.Label(win, text="(System will detect Game ID folder automatically)", 
                  bg=COLOR_CARD, fg="#aaaaaa", font=("Segoe UI", 9, "italic"), wraplength=480).pack(pady=(0, 10))
         
         btn_frame = tk.Frame(win, bg=COLOR_CARD)
@@ -1826,20 +1372,16 @@ del "%~f0"
             d = filedialog.askdirectory()
             if d: threading.Thread(target=self.process_translation_task, args=(d, root_path, "folder"), daemon=True).start()
 
-        ttk.Button(btn_frame, text="📄 File Nén (Zip/Rar...)", command=on_zip).pack(side="left", padx=10)
-        ttk.Button(btn_frame, text="📂 Thư Mục (Folder)", command=on_folder).pack(side="left", padx=10)
+        ttk.Button(btn_frame, text="📄 Archive (Zip/Rar...)", command=on_zip).pack(side="left", padx=10)
+        ttk.Button(btn_frame, text="📂 Folder", command=on_folder).pack(side="left", padx=10)
 
     def extract_archive_external(self, source_file, dest_dir):
-        """Dùng WinRAR hoặc 7-Zip đã cài đặt để giải nén"""
-        
+        """Use WinRAR or 7-Zip"""
         seven_zip_path = r"C:\Program Files\7-Zip\7z.exe"
         winrar_path = r"C:\Program Files\WinRAR\WinRAR.exe"
-        
         cmd = None
-        
         if os.path.exists(seven_zip_path):
             cmd = [seven_zip_path, "x", source_file, f"-o{dest_dir}", "-y"]
-            
         elif os.path.exists(winrar_path):
             cmd = [winrar_path, "x", "-ibck", source_file, dest_dir + "\\"]
         
@@ -1847,7 +1389,6 @@ del "%~f0"
             try:
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                
                 subprocess.run(cmd, check=True, startupinfo=startupinfo)
                 return True
             except subprocess.CalledProcessError as e:
@@ -1875,28 +1416,19 @@ del "%~f0"
                 os.makedirs(temp_dir)
 
                 extracted_ok = False
-                if source.lower().endswith(".7z") or source.lower().endswith(".rar"):
+                if source.lower().endswith((".7z", ".rar")):
                     extracted_ok = self.extract_archive_external(source, temp_dir)
                 
                 if not extracted_ok:
                     if source.lower().endswith(".zip"):
                         with zipfile.ZipFile(source, 'r') as z: z.extractall(temp_dir)
                     elif source.lower().endswith(".7z"):
-                        try:
-                            import py7zr
-                            with py7zr.SevenZipFile(source, mode='r') as z: z.extractall(path=temp_dir)
-                        except ImportError:
-                            messagebox.showerror("Lỗi thiếu thư viện", "Máy bạn không có 7-Zip/WinRAR và thiếu thư viện py7zr.")
-                            return     
+                        import py7zr
+                        with py7zr.SevenZipFile(source, mode='r') as z: z.extractall(path=temp_dir)
                     elif source.lower().endswith(".rar"):
-                        try:
-                            import rarfile
-                            r = rarfile.RarFile(source)
-                            r.extractall(temp_dir)
-                        except:
-                             messagebox.showerror("Lỗi RAR", f"Vui lòng cài WinRAR vào máy tính.")
-                             return
-                
+                        import rarfile
+                        r = rarfile.RarFile(source)
+                        r.extractall(temp_dir)
                 search_path = temp_dir
 
             contents_dir = os.path.join(root_path, "atmosphere", "contents")
@@ -1911,7 +1443,6 @@ del "%~f0"
                     if os.path.exists(dest_game_path): shutil.rmtree(dest_game_path)
                     shutil.copytree(source, dest_game_path, dirs_exist_ok=True)
                     found_count = 1
-                    
                 else: 
                     nested_path = os.path.join(temp_dir, input_name)
                     if os.path.exists(nested_path) and os.path.isdir(nested_path):
@@ -1922,14 +1453,12 @@ del "%~f0"
                         if not os.path.exists(dest_game_path): os.makedirs(dest_game_path)
                         self.copy_tree_custom(temp_dir, dest_game_path)
                         found_count = 1
-
             else:
                 for root, dirs, files in os.walk(search_path):
                     for dirname in dirs[:]:
                         if is_game_id_strict(dirname):
                             src_game_path = os.path.join(root, dirname)
                             dest_game_path = os.path.join(contents_dir, dirname)
-                            
                             if os.path.exists(dest_game_path): shutil.rmtree(dest_game_path)
                             shutil.copytree(src_game_path, dest_game_path, dirs_exist_ok=True)
                             found_count += 1
@@ -1940,10 +1469,10 @@ del "%~f0"
             
             if found_count > 0:
                 self.root.after(0, lambda: self.status_label.config(text=f"Installed {found_count} translations!", fg=COLOR_SUCCESS))
-                messagebox.showinfo("Success", f"Đã cài đặt thành công {found_count} gói ngôn ngữ vào atmosphere/contents.")
+                messagebox.showinfo("Success", f"Installed {found_count} translations.")
             else:
                 self.root.after(0, lambda: self.status_label.config(text="No translation found.", fg=COLOR_WARNING))
-                messagebox.showwarning("Failed", "Không tìm thấy nội dung Việt Hóa hợp lệ.\nHãy chắc chắn tên file/folder là ID Game (0100...) hoặc bên trong có chứa folder ID Game.")
+                messagebox.showwarning("Failed", "No valid translation found (Game ID mismatch).")
 
         except Exception as e:
             self.root.after(0, lambda: self.status_label.config(text="Error", fg="red"))
@@ -1964,13 +1493,56 @@ del "%~f0"
             return
 
         if fix_type == "ACTION_FIX_REINSTALL_PACK":
-            msg = "To fix completely, reinstall the AIO Pack.\nApp will scroll to top." if self.lang_code == "EN" else "Để sửa lỗi triệt để nhất, bạn nên cài lại gói hack chuẩn.\nPhần mềm sẽ đưa bạn đến mục trên cùng."
+            msg = "Reinstalling AIO Pack."
             messagebox.showinfo("Reinstall Pack", msg)
             self.canvas.yview_moveto(0) 
             return
 
-        msg_confirm = "This will modify/delete files on SD card.\nContinue?" if self.lang_code == "EN" else "Hành động này sẽ thay đổi/xóa file trên thẻ nhớ để sửa lỗi.\nBạn có chắc chắn muốn tiếp tục không?"
-        if not messagebox.askyesno("Confirm", msg_confirm):
+        # --- HARD RESET LOGIC ---
+        if fix_type == "ACTION_FIX_HARD_RESET":
+            warn_title = "DANGER ZONE"
+            warn_msg = "⚠️ THIS WILL WIPE THE SD CARD (Except emuMMC)!\nAre you sure?"
+            if self.lang_code == "VI":
+                 warn_title = "CẢNH BÁO NGUY HIỂM"
+                 warn_msg = "⚠️ HÀNH ĐỘNG NÀY SẼ XÓA SẠCH THẺ NHỚ (Trừ emuMMC)!\nBạn có chắc không?"
+            
+            if not messagebox.askyesno(warn_title, warn_msg, icon='warning'):
+                return
+            
+            try:
+                self.root.after(0, lambda: self.status_label.config(text="HARD RESET: Deleting files...", fg=COLOR_DANGER))
+                items = os.listdir(root_path)
+                deleted_count = 0
+                for item in items:
+                    # Ignore emummc and similar variants
+                    if "emummc" in item.lower(): continue 
+                    
+                    full_path = os.path.join(root_path, item)
+                    try:
+                        if os.path.isdir(full_path): shutil.rmtree(full_path)
+                        else: os.remove(full_path)
+                        deleted_count += 1
+                    except Exception as e:
+                        print(f"Cannot delete {item}: {e}")
+                
+                msg_done = f"Deleted {deleted_count} items. Installing My Pack..."
+                self.root.after(0, lambda: self.status_label.config(text=msg_done, fg=COLOR_SUCCESS))
+                
+                my_pack_url = "https://rebrand.ly/mypack"
+                webbrowser.open(my_pack_url)
+                
+                msg_next = "SD Card Cleaned. Please pick the My Pack zip to install."
+                if self.lang_code == "VI":
+                    msg_next = "Đã dọn sạch thẻ nhớ. Vui lòng chọn file My Pack để cài đặt."
+
+                messagebox.showinfo("Hard Reset Step 1 Done", msg_next)
+                self.install_local_zip_generic("My Pack (Clean Install)")
+            except Exception as e:
+                messagebox.showerror("Reset Error", str(e))
+            return
+
+        # Soft Fixes
+        if not messagebox.askyesno("Confirm", "Modify/Delete files on SD card?"):
             return
 
         try:
@@ -1982,13 +1554,12 @@ del "%~f0"
                 target = os.path.join(atm_contents, theme_id)
                 if os.path.exists(target):
                     shutil.rmtree(target)
-                    msg = "Deleted Theme. Please reboot."
+                    msg = "Deleted Theme."
                 else:
                     msg = "Theme folder not found."
 
             elif fix_type == "ACTION_FIX_DELETE_ALL_CONTENTS":
-                msg_warn = "WARNING: Wiping atmosphere/contents.\nAll mods/cheats/sysmodules will be lost.\nProceed?" if self.lang_code == "EN" else "CẢNH BÁO: XÓA SẠCH thư mục atmosphere/contents.\nMất toàn bộ Sysmod, Việt Hóa, Cheat.\nTiếp tục?"
-                if messagebox.askyesno("EXTREME WARNING", msg_warn):
+                if messagebox.askyesno("WARNING", "Wipe atmosphere/contents?"):
                     if os.path.exists(atm_contents):
                         shutil.rmtree(atm_contents)
                         os.makedirs(atm_contents)
@@ -2008,7 +1579,7 @@ del "%~f0"
                         if item.upper() in common_modules or item in common_modules:
                             shutil.rmtree(os.path.join(atm_contents, item))
                             deleted_count += 1
-                msg = f"Removed {deleted_count} common sysmodules."
+                msg = f"Removed {deleted_count} sysmodules."
 
             elif fix_type == "ACTION_FIX_CHEATS":
                 deleted_count = 0
@@ -2029,7 +1600,7 @@ del "%~f0"
                                 os.remove(os.path.join(root, file))
                                 deleted_count += 1
                             except: pass
-                msg = f"Cleaned {deleted_count} MacOS junk files."
+                msg = f"Cleaned {deleted_count} junk files."
 
             messagebox.showinfo("Result", msg)
 
@@ -2037,7 +1608,6 @@ del "%~f0"
             messagebox.showerror("Fix Error", str(e))
 
 if __name__ == "__main__":
-    # Mã đặt ID App đã được chuyển lên đầu file để đảm bảo Icon load đúng
     root = tk.Tk()
     app = SwitchToolApp(root)
     root.mainloop()
