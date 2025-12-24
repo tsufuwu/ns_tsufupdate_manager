@@ -1,0 +1,5 @@
+{
+    "name": "sys-ftpd-freeze",
+    "tid": "420000000000000D",
+    "requires_reboot": false
+}

@@ -16,7 +16,7 @@ from PIL import Image, ImageTk, ImageSequence
 
 # --- SET APP ID FOR TASKBAR ICON ---
 try:
-    myappid = 'tsufu.switch.update.manager.pro.v102'
+    myappid = 'tsufu.switch.update.manager.pro.v102' 
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 except: 
     pass
@@ -55,7 +55,7 @@ FONT_TITLE = ("Segoe UI", 11, "bold")
 FONT_NORMAL = ("Segoe UI", 10)
 FONT_SMALL = ("Segoe UI", 9)
 
-# --- UI DICTIONARY (RESTORED FULL DETAIL) ---
+# --- UI DICTIONARY (FULL DETAILED VIETNAMESE RESTORED) ---
 UI_TEXT = {
     "VI": {
         "title": "SWITCH TSUFUPDATE MANAGER",
@@ -82,32 +82,46 @@ UI_TEXT = {
         "cat_fix": "🚑 FIX LỖI NHANH (Sự cố thường gặp)",
         "cat_guide": "📚 CÁC HƯỚNG DẪN ",
         "cat_game_source": "👾 NGUỒN DOWNLOAD GAME",
-        "msg_fw_done": "Đã chép file Firmware thành công vào thẻ nhớ, nhưng chưa xong, bạn cần xem hướng dẫn update Firmware ở nút bên cạnh để hoàn thành. Nhớ cập nhật gói my pack ở đầu phần mềm",
+        "msg_fw_done": "Đã tải và giải nén Firmware thành công vào thẻ nhớ!\n\nLƯU Ý QUAN TRỌNG:\nĐây chỉ là bước chép file. Để cập nhật máy, bạn cần mở app 'Daybreak' trên Switch để tiến hành cài đặt Firmware vừa tải.\n\nNhớ cập nhật gói My Pack hoặc Atmosphere mới nhất trước khi chạy Daybreak để tránh lỗi.",
         "ams_195_title": "Cảnh báo tương thích Atmosphere 1.9.5",
         "ams_195_msg": """⚠️ CẢNH BÁO QUAN TRỌNG VỀ FIRMWARE & HẠ CẤP
 
 Phiên bản này tương thích tốt nhất với Tinfoil/App cũ, NHƯNG chỉ hỗ trợ Firmware < 21.0.0.
-Nếu chỉ có Custom Firmware (CFW) của bạn cập nhật lên 21.0.0 thì có thể xem xét hạ cấp firmware, còn nếu bạn đã nâng cấp cả OFW lên 21.0.0 đổ lên thì buộc dùng AMS mới nhất trong gói my pack
-🔴 LƯU Ý NẾU BẠN MUỐN HẠ CẤP (DOWNGRADE) CFW :
-1. Nếu chỉ có EmuNAND (CFW) lỡ lên cao: Có thể dùng Daybreak để hạ cấp (tương tự nâng cấp).
+Nếu chỉ có Custom Firmware (CFW) của bạn cập nhật lên 21.0.0 thì có thể xem xét hạ cấp firmware, còn nếu bạn đã nâng cấp cả OFW lên 21.0.0 đổ lên thì buộc dùng AMS mới nhất trong gói my pack.
+
+🔴 LƯU Ý NẾU BẠN MUỐN HẠ CẤP (DOWNGRADE) CFW:
+1. Nếu chỉ có EmuNAND (CFW) lỡ lên cao: Có thể dùng Daybreak để hạ cấp.
 2. CẢNH BÁO FW 21.x: Nếu đang ở FW 21, KHUYẾN NGHỊ NẾU BẠN KHÔNG CHẮC CHẮN THÌ KHÔNG NÊN HẠ, HOẶC ĐẢM BẢO ĐÃ BACK UP THẺ NHỚ. Đã có nhiều trường hợp hạ từ 21 về 20 hoặc 20 về 19 bị Semi-Brick (lỗi 2002-3005).
 3. CÁCH CỨU NẾU BỊ BRICK KHI HẠ CẤP:
    - Khởi động vào chế độ Maintenance của EmuNAND.
    - Chọn dòng 2: "Initialize Console" để khôi phục lại hệ điều hành (HOS).
    (Nên Backup dữ liệu trước khi thực hiện).
 
-👉 Bấm nút "Hướng dẫn Maintenance Mode" bên dưới để xem cách vào chế độ này.""", 
-        # ---------------------------
+👉 Bấm nút "Hướng dẫn Maintenance Mode" bên dưới để xem chi tiết.""", 
         "btn_maintenance_guide": "📖 Hướng dẫn Maintenance Mode",
         "chk_mtp_label": "Chọn vào đây nếu bạn dùng DBI (MTP)",
-        "msg_mtp_alert": "Lưu ý: Chỉ dùng chế độ này để tải sysmod, homebrew, file save, cheat... và các thứ phụ.\nKHÔNG dùng để fix lỗi hệ thống hay cài gói hack (Atmosphere/Hekate)!\n\nSau khi bấm OK, hãy chọn một nơi để lưu tạm file trên máy tính, hệ thống sẽ tải các file bạn chọn vào đó,\nkhi xong bạn hãy copy paste tất cả folder vừa tải vào ổ MTP -> SD Card.",
+        "msg_mtp_alert": "Lưu ý: Chế độ này dùng cho kết nối MTP (DBI).\n\nSau khi bấm OK, hãy chọn một thư mục tạm trên máy tính để tải file về.\nSau khi tải xong, bạn hãy copy thủ công các file đó vào ổ Switch MTP.",
         "btn_hard_reset": "☢️ CHẠY RESET",
-        "tip_hard_reset": "Chọn option này khi bạn đã thử nhiều cách fix mềm bên dưới vẫn không thể khắc phục, khi đó phần mềm sẽ xóa sạch thẻ nhớ, chỉ giữ lại thư mục chứa hệ điều hành (emuMMC) và tự động cài lại mới gói hack My Pack, tất cả mọi thứ như gói hack, sysmodule, homebrew, việt hóa, mod,... sẽ biến mất. Hãy back up nếu cần",
+        "tip_hard_reset": "Chọn option này khi bạn đã thử nhiều cách fix mềm bên dưới vẫn không thể khắc phục. Phần mềm sẽ XÓA SẠCH thẻ nhớ (chỉ giữ lại thư mục emuMMC và các thư mục backup an toàn) và tự động tải lại gói My Pack.",
         "msg_update_virus": "Nếu cập nhật thất bại, hãy thử tắt phần mềm diệt Virus và thử lại.",
         "msg_update_manual": "Nếu phần mềm không tự khởi động lại, vui lòng mở lại file thủ công.",
         "btn_cancel": "❌ Hủy Tải (Cancel)",
-        "msg_dl_success": "Đã tải thành công: ",
-        "msg_cancelled": "Đã hủy tác vụ tải xuống và xóa file tạm."
+        "msg_dl_success": "Đã tải và cài đặt thành công: ",
+        "msg_cancelled": "Đã hủy tác vụ tải xuống và xóa file tạm.",
+        # --- NEW KEYS FOR DIALOGS ---
+        "trans_title": "Chọn nguồn cài đặt Việt Hóa",
+        "trans_msg_1": "Bạn muốn cài đặt từ File Nén hay Thư Mục có sẵn?",
+        "trans_msg_2": "(Hệ thống thông minh sẽ tự động quét ID Game bên trong file nén/thư mục để chép vào đúng vị trí atmosphere/contents, bạn không cần phải giải nén thủ công)",
+        "trans_btn_zip": "📄 File Nén (Zip/Rar/7z...)",
+        "trans_btn_folder": "📂 Thư Mục (Folder)",
+        "fix_theme_ok": "Đã xóa giao diện (Theme) thành công!\nNếu máy bạn bị treo logo hoặc màn hình đen, hãy khởi động lại (Reboot) máy ngay bây giờ để kiểm tra.",
+        "fix_theme_fail": "Không tìm thấy thư mục Theme nào để xóa. Có thể bạn chưa cài theme hoặc đã xóa rồi.",
+        "fix_mod_ok": "Đã gỡ bỏ {count} Sysmodules phổ biến (Tesla, Emuiibo...).\nMáy sẽ chạy nhẹ hơn và khắc phục được lỗi xung đột (Crash).",
+        "fix_cheat_ok": "Đã xóa sạch file Cheat của {count} game.\nViệc này giúp khắc phục lỗi vào game bị văng (Crash) do cheat cũ không tương thích.",
+        "fix_junk_ok": "Đã dọn sạch {count} file rác MacOS (._file).\nHekate sẽ không còn báo lỗi 'Archive Bit' khó chịu nữa.",
+        "fix_wipe_warn": "CẢNH BÁO NGUY HIỂM!\n\nHành động này sẽ XÓA SẠCH thư mục 'atmosphere/contents'.\n- Mất toàn bộ Việt Hóa.\n- Mất toàn bộ Mod game.\n- Mất toàn bộ Cheat và Sysmodule.\n\nBạn có chắc chắn muốn làm điều này để sửa lỗi máy hay bị Crash không?",
+        "fix_wipe_ok": "Đã xóa sạch thư mục Contents. Máy bạn đã trở về trạng thái sạch (như chưa cài mod).",
+        "hard_reset_warn": "⚠️ CẢNH BÁO NGUY HIỂM (DANGER ZONE) ⚠️\n\nHành động này sẽ:\n1. XÓA SẠCH toàn bộ dữ liệu trên thẻ nhớ (Game, App, Config...).\n2. CHỈ GIỮ LẠI thư mục 'emuMMC' (Hệ điều hành ảo) và các thư mục Nintendo.\n3. Tự động tải và cài lại gói My Pack chuẩn.\n\nBạn chỉ nên dùng khi máy bị lỗi quá nặng không sửa được để cứu dữ liệu game\nBạn có CHẮC CHẮN muốn tiếp tục không?"
     },
     "EN": {
         "title": "SWITCH TSUFUPDATE MANAGER",
@@ -134,23 +148,47 @@ Nếu chỉ có Custom Firmware (CFW) của bạn cập nhật lên 21.0.0 thì 
         "cat_fix": "🚑 QUICK FIX (Common Issues)",
         "cat_guide": "📚 GUIDES",
         "cat_game_source": "👾 GAME DOWNLOAD SOURCES",
-        "msg_fw_done": "Firmware files copied successfully to SD card. You need to use Daybreak to apply the update. Remember to update My Pack first.",
+        "msg_fw_done": "Firmware files copied successfully to SD card!\n\nIMPORTANT:\nThis is just a file copy. To update your system, you must open 'Daybreak' on your Switch to install this Firmware.\n\nRemember to update My Pack or Atmosphere first to avoid errors.",
         "ams_195_title": "Atmosphere 1.9.5 Compatibility Warning",
-        "ams_195_msg": """This Atmosphere version is compatible with most apps...""",
+        "ams_195_msg": """⚠️ IMPORTANT FIRMWARE & DOWNGRADE WARNING
+
+This version is best for Tinfoil/Legacy apps but ONLY supports Firmware < 21.0.0.
+
+🔴 DOWNGRADE NOTES:
+1. If only EmuNAND is updated: You can try downgrading via Daybreak.
+2. FW 21.x WARNING: Downgrading from 21 to 20 often causes a Semi-Brick (Error 2002-3005). BACKUP YOUR SD CARD FIRST.
+3. HOW TO FIX SEMI-BRICK:
+   - Boot into EmuNAND's "Maintenance Mode".
+   - Select Option 2: "Initialize Console" to restore HOS.
+   (Please Backup data before proceeding).
+
+👉 Click "Maintenance Mode Guide" below for instructions.""",
         "btn_maintenance_guide": "📖 Maintenance Mode Guide",
         "chk_mtp_label": "Check here if using DBI (MTP)",
-        "msg_mtp_alert": "Note: Only use this for sysmods, homebrew, saves, cheats...\nDO NOT use for System Fixes or Core Hack (Atmosphere/Hekate)!\n\nAfter clicking OK, please select a temporary folder. The system will download files there.\nOnce done, you must copy/paste them to MTP -> SD Card manually.",
+        "msg_mtp_alert": "Note: DBI (MTP) Mode selected.\n\nAfter clicking OK, please select a temporary folder on your PC.\nThe system will download files there. You must manually copy them to the Switch MTP drive afterwards.",
         "btn_hard_reset": "☢️ HARD RESET",
-        "tip_hard_reset": "Choose this option when soft fixes fail. The software will wipe the SD card, keeping only the OS folder (emuMMC), and reinstall My Pack. All hacks, sysmodules, homebrew, mods will be lost. Backup if needed.",
+        "tip_hard_reset": "Use this when other fixes fail. This will WIPE the SD Card (keeping only emuMMC) and reinstall My Pack automatically. Backup needed.",
         "msg_update_virus": "If update fails, please try disabling Anti-Virus and try again.",
         "msg_update_manual": "If the app does not restart automatically, please open the file manually.",
         "btn_cancel": "❌ Cancel Download",
-        "msg_dl_success": "Download Success: ",
-        "msg_cancelled": "Download task cancelled."
+        "msg_dl_success": "Download & Install Success: ",
+        "msg_cancelled": "Download task cancelled. Temp files deleted.",
+        "trans_title": "Install Translation Pack",
+        "trans_msg_1": "Select Archive File or Folder?",
+        "trans_msg_2": "(The system will automatically detect the Game ID folder inside and copy it to the correct path. No manual extraction needed)",
+        "trans_btn_zip": "📄 Archive (Zip/Rar/7z...)",
+        "trans_btn_folder": "📂 Folder",
+        "fix_theme_ok": "Theme deleted successfully!\nIf your Switch had a black screen or boot loop, please Reboot now to verify.",
+        "fix_theme_fail": "No theme folder found to delete.",
+        "fix_mod_ok": "Removed {count} common sysmodules (Tesla, Emuiibo...).\nYour system should be lighter and crash less.",
+        "fix_cheat_ok": "Deleted cheats for {count} games.\nThis helps fix crashes caused by incompatible cheat codes.",
+        "fix_junk_ok": "Cleaned {count} MacOS junk files (._file).\nFixed 'Archive Bit' errors.",
+        "fix_wipe_warn": "DANGER!\n\nThis will DELETE EVERYTHING in 'atmosphere/contents'.\n- Lose all Translations.\n- Lose all Game Mods.\n- Lose all Cheats & Sysmodules.\n\nAre you sure you want to proceed to fix crashes?",
+        "fix_wipe_ok": "Wiped Contents folder. Your system is now clean (like no mods installed).",
+        "hard_reset_warn": "⚠️ DANGER ZONE ⚠️\n\nThis action will:\n1. WIPE ALL DATA on SD Card (Games, Apps, Configs...).\n2. KEEP ONLY 'emuMMC' folder and Nintendo folders.\n3. Automatically download and reinstall My Pack.\n\nOnly use this for critical errors.\nAre you SURE?"
     }
 }
 
-# --- DATA WITH FULL DESCRIPTIONS ---
 DATA_VI = {
     "🔥 FILE HACK & CÔNG CỤ PC": [
         {"name": "Gói hack tổng hợp My Pack", "desc": "Bộ công cụ hack Switch được tùy chỉnh riêng (AIO). Bao gồm Atmosphere, Hekate và các sysmod cần thiết nhất để chạy ngay lập tức. Xem phiên bản ở dòng chữ xanh lá bên trên ", 
@@ -193,7 +231,7 @@ DATA_VI = {
         {"name": "Việt hóa game", "desc": "Tổng hợp các bản Patch tiếng Việt cho game Switch. Cần tải về và cài đặt đúng thư mục (thường là atmosphere/contents).", "urls": {"Link tham khảo": "https://docs.google.com/spreadsheets/d/1k_8w_Eb7M6_3q1-FrtY0gYdrCokr3IGxuk-oj_u-zbw/preview"}},
     ],
     "🚑 FIX LỖI NHANH (Sự cố thường gặp)": [
-        {"name": "HARD RESET (XÓA SẠCH LÀM LẠI)", "desc": "Sử dụng khi các cách fix mềm không hiệu quả. Xóa sạch thẻ nhớ (chỉ giữ emuMMC) và cài lại My Pack.", "urls": {"☢️ CHẠY RESET": "ACTION_FIX_HARD_RESET"}},
+        {"name": "HARD RESET (XÓA SẠCH LÀM LẠI)", "desc": "Sử dụng khi các cách fix mềm không hiệu quả. Xóa sạch thẻ nhớ (chỉ giữ emuMMC, chứa game + save game) và cài lại My Pack.", "urls": {"☢️ CHẠY RESET": "ACTION_FIX_HARD_RESET"}},
         {"name": "Cài lại gói hack My Pack (Khuyến nghị)", "desc": "Cách sửa lỗi triệt để nhất khi máy bị lỗi nặng. Hệ thống sẽ đưa bạn đến mục tải gói hack chuẩn để cài lại từ đầu.", "urls": {"🛠️ Chạy Fix": "ACTION_FIX_REINSTALL_PACK"}},
         {"name": "Gỡ bỏ Themes (Fix màn hình đen/Bootloop)", "desc": "Xóa thư mục theme (0100000000001000). Dùng khi bạn cài theme lỗi khiến máy không khởi động được hoặc bị màn hình đen sau logo Atmosphere.", "urls": {"🛠️ Chạy Fix": "ACTION_FIX_THEMES"}},
         {"name": "Gỡ bỏ các Sysmodules phổ biến", "desc": "Chỉ xóa các module chạy ngầm phổ biến (Tesla, Emuiibo, SysDVR...). Giữ lại Việt hóa và Mod game. Dùng khi máy hay bị Crash nhẹ.", "urls": {"🛠️ Chạy Fix": "ACTION_FIX_MODULES"}},
@@ -317,7 +355,7 @@ class SwitchToolApp:
 
     def update_title(self):
         self.root.title(f"{UI_TEXT[self.lang_code]['title']} (v{APP_VERSION})")
-    # Thêm hàm này vào trong class SwitchToolApp
+    
     def confirm_my_pack_download(self):
         msg = (
             "⚠️ LƯU Ý QUAN TRỌNG VỀ TƯƠNG THÍCH ⚠️\n\n"
@@ -331,7 +369,6 @@ class SwitchToolApp:
             "Bạn có ĐÃ HIỂU và muốn tiếp tục tải về không?"
         )
         
-        # Hiện hộp thoại xác nhận (OK/Cancel)
         if messagebox.askokcancel("Xác nhận tải My Pack", msg, icon='warning'):
             webbrowser.open("https://rebrand.ly/mypack")
 
@@ -557,7 +594,7 @@ class SwitchToolApp:
                                 font=("Segoe UI", 9, "italic"), bg=COLOR_BG, fg="#dddddd", justify="left")
         lbl_credit_2.pack(side="top", anchor="w", pady=(2, 0))
         # --- THÊM MỚI: HIỂN THỊ THÔNG TIN PHIÊN BẢN ---
-        ver_info_text = "✨ Update 1.0.2 (25/12/2024): Hekate v6.4.2 | Atmosphere 1.10.1 | Sigpatches v1.10.1p"
+        ver_info_text = f"✨ Update {APP_VERSION} (25/12/2024): Hekate v6.4.2 | Atmosphere 1.10.1 | Sigpatches v1.10.1p"
         lbl_version_info = tk.Label(left_info, text=ver_info_text,
                                     font=("Segoe UI", 9, "bold"), bg=COLOR_BG, fg=COLOR_SUCCESS, justify="left")
         lbl_version_info.pack(side="top", anchor="w", pady=(5, 0))
@@ -1384,10 +1421,11 @@ del "%~f0"
 
     def install_translation_pack(self):
         root_path = self.dest_path.get()
+        text_db = UI_TEXT[self.lang_code]
         if not os.path.exists(root_path): return messagebox.showwarning("Warning", "Select Root first!")
         
         win = tk.Toplevel(self.root)
-        win.title("Install Translation")
+        win.title(text_db.get("trans_title", "Install Translation"))
         
         win.geometry("500x220") 
         win.configure(bg=COLOR_CARD)
@@ -1396,9 +1434,9 @@ del "%~f0"
         y = self.root.winfo_y() + (self.root.winfo_height()//2) - 110
         win.geometry(f"+{x}+{y}")
 
-        tk.Label(win, text="Select Archive or Folder?", bg=COLOR_CARD, fg="white", font=("Segoe UI", 11)).pack(pady=(20, 5))
+        tk.Label(win, text=text_db.get("trans_msg_1"), bg=COLOR_CARD, fg="white", font=("Segoe UI", 11)).pack(pady=(20, 5))
         
-        tk.Label(win, text="(System will detect Game ID folder automatically)", 
+        tk.Label(win, text=text_db.get("trans_msg_2"), 
                  bg=COLOR_CARD, fg="#aaaaaa", font=("Segoe UI", 9, "italic"), wraplength=480).pack(pady=(0, 10))
         
         btn_frame = tk.Frame(win, bg=COLOR_CARD)
@@ -1414,8 +1452,8 @@ del "%~f0"
             d = filedialog.askdirectory()
             if d: threading.Thread(target=self.process_translation_task, args=(d, root_path, "folder"), daemon=True).start()
 
-        ttk.Button(btn_frame, text="📄 Archive (Zip/Rar...)", command=on_zip).pack(side="left", padx=10)
-        ttk.Button(btn_frame, text="📂 Folder", command=on_folder).pack(side="left", padx=10)
+        ttk.Button(btn_frame, text=text_db.get("trans_btn_zip"), command=on_zip).pack(side="left", padx=10)
+        ttk.Button(btn_frame, text=text_db.get("trans_btn_folder"), command=on_folder).pack(side="left", padx=10)
 
     def extract_archive_external(self, source_file, dest_dir):
         """Use WinRAR or 7-Zip"""
@@ -1511,10 +1549,10 @@ del "%~f0"
             
             if found_count > 0:
                 self.root.after(0, lambda: self.status_label.config(text=f"Installed {found_count} translations!", fg=COLOR_SUCCESS))
-                messagebox.showinfo("Success", f"Installed {found_count} translations.")
+                messagebox.showinfo("Success", f"Đã cài đặt thành công {found_count} gói Việt Hóa.\nHãy vào game để kiểm tra!")
             else:
                 self.root.after(0, lambda: self.status_label.config(text="No translation found.", fg=COLOR_WARNING))
-                messagebox.showwarning("Failed", "No valid translation found (Game ID mismatch).")
+                messagebox.showwarning("Failed", "Không tìm thấy nội dung Việt Hóa hợp lệ.\nHệ thống tự động quét nhưng không thấy thư mục ID Game (0100...) nào.")
 
         except Exception as e:
             self.root.after(0, lambda: self.status_label.config(text="Error", fg="red"))
@@ -1530,6 +1568,7 @@ del "%~f0"
 
     def run_fix_task(self, fix_type):
         root_path = self.dest_path.get()
+        text_db = UI_TEXT[self.lang_code]
         if not os.path.exists(root_path):
             messagebox.showerror("Error", "Select SD Root first!")
             return
@@ -1542,13 +1581,8 @@ del "%~f0"
 
         # --- HARD RESET LOGIC ---
         if fix_type == "ACTION_FIX_HARD_RESET":
-            warn_title = "DANGER ZONE"
-            warn_msg = "⚠️ THIS WILL WIPE THE SD CARD (Except emuMMC)!\nAre you sure?"
-            if self.lang_code == "VI":
-                 warn_title = "CẢNH BÁO NGUY HIỂM"
-                 warn_msg = "⚠️ HÀNH ĐỘNG NÀY SẼ XÓA SẠCH THẺ NHỚ (Trừ emuMMC)!\nBạn có chắc không?"
-            
-            if not messagebox.askyesno(warn_title, warn_msg, icon='warning'):
+            warn_msg = text_db.get("hard_reset_warn")
+            if not messagebox.askyesno("Confirm Hard Reset", warn_msg, icon='warning'):
                 return
             
             try:
@@ -1575,7 +1609,7 @@ del "%~f0"
                 
                 msg_next = "SD Card Cleaned. Please pick the My Pack zip to install."
                 if self.lang_code == "VI":
-                    msg_next = "Đã dọn sạch thẻ nhớ. Vui lòng chọn file My Pack để cài đặt."
+                    msg_next = "Đã dọn sạch thẻ nhớ. Vui lòng chọn file My Pack vừa tải để cài đặt."
 
                 messagebox.showinfo("Hard Reset Step 1 Done", msg_next)
                 self.install_local_zip_generic("My Pack (Clean Install)")
@@ -1584,7 +1618,7 @@ del "%~f0"
             return
 
         # Soft Fixes
-        if not messagebox.askyesno("Confirm", "Modify/Delete files on SD card?"):
+        if not messagebox.askyesno("Confirm", text_db.get("fix_wipe_warn") if fix_type == "ACTION_FIX_DELETE_ALL_CONTENTS" else "Modify/Delete files on SD card?"):
             return
 
         try:
@@ -1596,19 +1630,18 @@ del "%~f0"
                 target = os.path.join(atm_contents, theme_id)
                 if os.path.exists(target):
                     shutil.rmtree(target)
-                    msg = "Deleted Theme."
+                    msg = text_db.get("fix_theme_ok")
                 else:
-                    msg = "Theme folder not found."
+                    msg = text_db.get("fix_theme_fail")
 
             elif fix_type == "ACTION_FIX_DELETE_ALL_CONTENTS":
-                if messagebox.askyesno("WARNING", "Wipe atmosphere/contents?"):
-                    if os.path.exists(atm_contents):
-                        shutil.rmtree(atm_contents)
-                        os.makedirs(atm_contents)
-                        msg = "Wiped Contents folder."
-                    else:
-                        os.makedirs(atm_contents)
-                        msg = "Folder created."
+                if os.path.exists(atm_contents):
+                    shutil.rmtree(atm_contents)
+                    os.makedirs(atm_contents)
+                    msg = text_db.get("fix_wipe_ok")
+                else:
+                    os.makedirs(atm_contents)
+                    msg = text_db.get("fix_wipe_ok")
 
             elif fix_type == "ACTION_FIX_MODULES":
                 common_modules = [
@@ -1621,7 +1654,7 @@ del "%~f0"
                         if item.upper() in common_modules or item in common_modules:
                             shutil.rmtree(os.path.join(atm_contents, item))
                             deleted_count += 1
-                msg = f"Removed {deleted_count} sysmodules."
+                msg = text_db.get("fix_mod_ok").format(count=deleted_count)
 
             elif fix_type == "ACTION_FIX_CHEATS":
                 deleted_count = 0
@@ -1631,7 +1664,7 @@ del "%~f0"
                         if os.path.exists(cheat_path):
                             shutil.rmtree(cheat_path)
                             deleted_count += 1
-                msg = f"Deleted cheats for {deleted_count} games."
+                msg = text_db.get("fix_cheat_ok").format(count=deleted_count)
 
             elif fix_type == "ACTION_FIX_MAC_JUNK":
                 deleted_count = 0
@@ -1642,7 +1675,7 @@ del "%~f0"
                                 os.remove(os.path.join(root, file))
                                 deleted_count += 1
                             except: pass
-                msg = f"Cleaned {deleted_count} junk files."
+                msg = text_db.get("fix_junk_ok").format(count=deleted_count)
 
             messagebox.showinfo("Result", msg)
 
