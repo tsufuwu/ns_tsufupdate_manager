@@ -487,7 +487,49 @@ class SwitchToolApp:
         text_area.pack(fill="both", expand=True, padx=10, pady=5)
 
         guide_content = """
-Please refer to the online guide or tooltips for detailed instructions.
+*** PHẦN TIẾNG VIỆT ***
+
+1. CHUẨN BỊ:
+   - Kết nối thẻ nhớ Switch tới máy tính
+    + Cách 1: Cắm thẻ nhớ Switch vào máy tính hoặc qua đầu đọc thẻ.
+    + Cách 2: Kết nối Switch qua dây USB Type C thông qua Hekate. Để vào Hekate, bạn cần tắt nguồn Switch hoàn toàn, rồi mở nguồn lên lại (hoặc giữ nút giảm âm lượng khi mở), sau đó vào Tools>Usb Tools>SD card, tiếp theo thực hiện cắm dây USB Type C
+   Lưu ý 1: Nếu bạn dùng Hekate USB Tools, hãy Eject thẻ nhớ ra khỏi máy trước khi ngắt kết nối cáp USB.
+   Lưu ý 2: MTP Responder (DBI) chỉ nên dùng để tải ứng dụng/game, KHÔNG NÊN dùng để cài file hack hệ thống (Atmosphere, Hekate) vì có thể gây lỗi.
+   - Tại mục "Chọn thư mục điểm đến", bấm "Chọn" để trỏ đến ổ đĩa thẻ nhớ của bạn.
+   - Nếu không biết ổ nào, bấm "Auto 🔄" để phần mềm quét giúp bạn.
+   - Nếu có thắc mắc gì về bất cứ tính năng nào, hãy trỏ chuột vào biểu tượng dấu chấm hỏi (?) để xem hướng dẫn nhanh.
+
+2. CÁCH TẢI VÀ CÀI ĐẶT:
+   - Danh sách được chia thành các nhóm: File Hack, Sysmod, Homebrew...
+   - Nút XANH (⚡ Tự động cài): Phần mềm sẽ tự tải file về và giải nén thẳng vào thẻ nhớ. Bạn không cần làm gì thêm.
+   - Nút VÀNG (Atmosphere): Bản ổn định khuyến nghị dùng.
+   - Nút XÁM (Web/Link): Sẽ mở trình duyệt web để bạn đọc hướng dẫn hoặc tải thủ công.
+   - Nút MŨI TÊN XANH (⬇️ Tải tất cả): Tự động tải lần lượt mọi thứ trong danh mục đó.
+
+3. SỬA LỖI (FIX):
+   - Nếu máy gặp lỗi (màn hình đen, crash game...), hãy kéo xuống mục "FIX LỖI NHANH".
+   - Bấm vào các nút Fix tương ứng để phần mềm tự động sửa file lỗi trên thẻ nhớ.
+
+------------------------------------------------
+
+*** ENGLISH SECTION ***
+
+1. PREPARATION:
+   - Insert your Switch SD card into PC (or connect via USB).
+   - Click "Browse" to select your SD card drive.
+   - Click "Auto Detect" if you are unsure which drive it is.
+   - NOTE: Do NOT use DBI MTP Responder for installing Core Hack files (Atmosphere). Use it only for Homebrew/Games.
+
+2. HOW TO INSTALL:
+   - Apps are categorized into: Hack Files, Sysmods, Homebrew...
+   - BLUE Button (⚡ Auto Install): The tool automatically downloads and extracts files to your SD card. No extra steps needed.
+   - GOLD Button: Recommended stable version.
+   - GREY Button (Web/Link): Opens a web browser for instructions or manual download sources.
+   - DOWN ARROW Button (⬇️ Download All): Automatically downloads everything in that category one by one.
+
+3. TROUBLESHOOTING (FIX):
+   - If you face issues (black screen, crashes...), scroll down to "QUICK FIX".
+   - Click the corresponding Fix buttons to let the tool repair files on your SD card automatically.
 """
         text_area.insert(tk.END, guide_content)
         text_area.config(state=tk.DISABLED) 
