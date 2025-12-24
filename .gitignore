@@ -1,0 +1,13 @@
+# Bỏ qua thư mục build của Python
+__pycache__/
+build/
+dist/
+*.spec
+
+# Bỏ qua môi trường ảo (nếu có dùng)
+venv/
+env/
+
+# Bỏ qua file cấu hình IDE
+.vscode/
+.idea/
