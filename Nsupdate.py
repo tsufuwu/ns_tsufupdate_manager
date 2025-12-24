@@ -14,18 +14,25 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 from urllib.parse import urlparse, unquote
 from PIL import Image, ImageTk, ImageSequence
 
-# --- HÀM QUAN TRỌNG: TÌM ĐƯỜNG DẪN TÀI NGUYÊN (FIX LỖI MẤT ICON/GIF) ---
+# --- FIX ICON TASKBAR (PHẦN 1): Đặt ID App trước khi tạo bất kỳ cửa sổ nào ---
+# Việc đặt ID này giúp Windows nhóm các cửa sổ của app vào một icon trên Taskbar
+try:
+    myappid = 'tsufu.switch.update.manager.pro.v101' # Đổi ID nhẹ để refresh cache icon của Windows
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+except: 
+    pass
+
+# --- HÀM QUAN TRỌNG: TÌM ĐƯỜNG DẪN TÀI NGUYÊN ---
 def resource_path(relative_path):
     """ Lấy đường dẫn tuyệt đối tới tài nguyên, dùng cho cả Dev và PyInstaller """
     try:
-        # PyInstaller tạo ra thư mục tạm này
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
 # --- CẤU HÌNH PHẦN MỀM & UPDATE ---
-APP_VERSION = "1.0.0"  # Đã sửa về 1.0.0 theo yêu cầu
+APP_VERSION = "1.0.1" 
 GITHUB_REPO = "tsufuwu/ns_tsufupdate_manager" 
 
 # --- CẤU HÌNH MÀU SẮC ---
@@ -54,7 +61,8 @@ UI_TEXT = {
         "title": "SWITCH TSUFUPDATE MANAGER",
         "credit": "Dev by Tsufu/Phú Trần Trung Lê",
         "credit2": "Chân thành cảm ơn Group Cộng Đồng Nintendo Switch hắc ám (Admin Phong Pham)\nvì các dữ liệu cung cấp cho phần mềm này",
-        "path_label": "Thẻ nhớ (Root):",
+        "path_label": "Chọn thư mục điểm đến: (không hỗ trợ DBI)",
+        "path_tip": "Nên là thẻ nhớ (Root) nếu bạn muốn xài tính năng cập nhật tự động.\nHoặc chọn thư mục bất kì để tải file vào đó rồi chép vào thẻ nhớ sau.\n Đọc HDSD để biết cách kết nối với thẻ nhớ root",
         "btn_browse": "📁 Chọn",
         "btn_detect": "🔄 Auto",
         "btn_open": "📂 Mở thư mục",
@@ -66,6 +74,7 @@ UI_TEXT = {
         "status_detect_ok": "Đã phát hiện thẻ nhớ/USB tại: ",
         "status_detect_fail": "Không tìm thấy ổ đĩa rời. Vui lòng chọn thủ công.",
         "msg_confirm_dl_all": "Bạn có muốn tự động tải tất cả ứng dụng trong mục:\n'{category}' không?\n\n(Lưu ý: Sẽ bỏ qua các file dành cho PC và cần hai bước như Sigpatch, Linkalho)",
+        "msg_mtp_warning": "⚠️ LƯU Ý MTP RESPONDER (DBI):\nViệc dùng MTP Responder qua DBI chỉ có tác dụng khi tải sysmod, homebrew, cheat, save...\n\nKHÔNG NÊN áp dụng cho File Hack (Atmosphere, Hekate...) vì sẽ dễ gây ra lỗi file hệ thống.\nChi tiết vui lòng đọc Hướng Dẫn Sử Dụng.",
         "cat_file": "🔥 FILE HACK & CÔNG CỤ PC",
         "cat_sysmod": "🛠️ SYSMOD HỮU ÍCH (Cần Restart)",
         "cat_homebrew": "🎮 HOMEBREW (Ứng dụng)",
@@ -73,13 +82,30 @@ UI_TEXT = {
         "cat_fix": "🚑 FIX LỖI NHANH (Sự cố thường gặp)",
         "cat_guide": "📚 CÁC HƯỚNG DẪN ",
         "cat_game_source": "👾 NGUỒN DOWNLOAD GAME",
-        "msg_fw_done": "Đã chép file Firmware thành công vào thẻ nhớ, nhưng chưa xong, bạn cần xem hướng dẫn update Firmware ở nút bên cạnh để hoàn thành. Nhớ cập nhật gói my pack ở đầu phần mềm"
+        "msg_fw_done": "Đã chép file Firmware thành công vào thẻ nhớ, nhưng chưa xong, bạn cần xem hướng dẫn update Firmware ở nút bên cạnh để hoàn thành. Nhớ cập nhật gói my pack ở đầu phần mềm",
+        "ams_195_title": "Cảnh báo tương thích Atmosphere 1.9.5",
+        "ams_195_msg": """Phiên bản Atmosphere này tương thích với hầu hết các ứng dụng, tuy nhiên chỉ hỗ trợ CFW và  OFW có firmware dưới 21.0.0.
+
+Trường hợp OFW ≥ 21.0.0:
+Nếu OFW đã cập nhật lên 21.0.0 hoặc cao hơn, bạn bắt buộc phải sử dụng Atmosphere mới nhất.
+Một số ứng dụng sẽ không thể sử dụng, do gần như không thể hạ cấp OFW trong trường hợp này.
+
+Trường hợp chỉ CFW (emuNAND) ≥ 21.0.0:
+Nếu chỉ CFW/emuNAND lỡ cập nhật lên 21.0.0, bạn có thể thử hạ firmware, thao tác tương tự như khi nâng firmware CFW.
+Bắt buộc sao lưu toàn bộ dữ liệu trong thẻ nhớ trước khi thực hiện (xem hướng dẫn Backup) để tránh mất dữ liệu.
+
+Khắc phục lỗi brick (nếu xảy ra):
+Trong trường hợp gặp lỗi 2002-3005 (0x177a02) dẫn đến máy không khởi động được:
+1. Khởi động vào Maintenance Mode của emuNAND.
+2. Chọn mục "Initialize Console" để khôi phục lại HOS.""",
+        "btn_maintenance_guide": "📖 Hướng dẫn Maintenance Mode"
     },
     "EN": {
         "title": "SWITCH TSUFUPDATE MANAGER",
         "credit": "Dev by Tsufu/Phu Tran Trung Le",
         "credit2": "Special thanks to Nintendo Switch Hacking Community Group (Admin Phong Pham)\nfor providing data for this software",
-        "path_label": "SD Card (Root):",
+        "path_label": "Select destination folder:",
+        "path_tip": "Should be SD Card (Root) for auto-update features.\nOr select any folder to download files there and copy manually later.",
         "btn_browse": "📁 Browse",
         "btn_detect": "🔄 Auto Detect",
         "btn_open": "📂 Open Folder",
@@ -91,6 +117,7 @@ UI_TEXT = {
         "status_detect_ok": "Detected SD Card/USB at: ",
         "status_detect_fail": "Removable drive not found. Please select manually.",
         "msg_confirm_dl_all": "Do you want to automatically download all apps in:\n'{category}'?\n\n(Note: PC files will be skipped)",
+        "msg_mtp_warning": "⚠️ MTP RESPONDER WARNING (DBI):\nUsing MTP Responder via DBI is okay for sysmods, homebrew, cheats, saves...\n\nDO NOT use it for Hack Files (Atmosphere, Hekate...) as it may cause system file errors.\nPlease read the User Manual for details.",
         "cat_file": "🔥 HACK FILES & PC TOOLS",
         "cat_sysmod": "🛠️ USEFUL SYSMODS (Restart Required)",
         "cat_homebrew": "🎮 HOMEBREW (Apps)",
@@ -98,7 +125,23 @@ UI_TEXT = {
         "cat_fix": "🚑 QUICK FIX (Common Issues)",
         "cat_guide": "📚 GUIDES",
         "cat_game_source": "👾 GAME DOWNLOAD SOURCES",
-        "msg_fw_done": "Firmware files copied successfully to SD card. You need to use Daybreak to apply the update. Remember to update My Pack first."
+        "msg_fw_done": "Firmware files copied successfully to SD card. You need to use Daybreak to apply the update. Remember to update My Pack first.",
+        "ams_195_title": "Atmosphere 1.9.5 Compatibility Warning",
+        "ams_195_msg": """This Atmosphere version is compatible with most apps, but only supports CFW and OFW with firmware below 21.0.0.
+
+Case OFW ≥ 21.0.0:
+If OFW is updated to 21.0.0+, you MUST use the latest Atmosphere.
+Some apps may not work, as downgrading OFW is nearly impossible.
+
+Case CFW (emuNAND) ≥ 21.0.0:
+If only CFW/emuNAND is updated to 21.0.0+, you can try downgrading firmware (same steps as upgrading).
+MUST Backup SD card data before proceeding to avoid data loss.
+
+Fix Brick (if happens):
+If you encounter error 2002-3005 (0x177a02) causing boot failure:
+1. Boot into emuNAND Maintenance Mode.
+2. Select "Initialize Console" to restore HOS.""",
+        "btn_maintenance_guide": "📖 Maintenance Mode Guide"
     }
 }
 
@@ -128,7 +171,10 @@ DATA_VI = {
         {
             "name": "Atmosphere (CFW)", 
             "desc": "Hệ điều hành tùy chỉnh (Custom Firmware) phổ biến nhất cho Switch. Đây là nền tảng cốt lõi để chạy các ứng dụng Homebrew, Mod, và game lậu.",
-            "urls": {"Tự động cài đặt": "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.10.1/atmosphere-1.10.1-master-21c0f75a2+hbl-2.4.5+hbmenu-3.6.1.zip"}
+            "urls": {
+                "Tự động cài đặt (Mới nhất)": "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.10.1/atmosphere-1.10.1-master-21c0f75a2+hbl-2.4.5+hbmenu-3.6.1.zip",
+                "Atmosphere 1.9.5 (Khuyến nghị)": "ACTION_AMS_195" 
+            }
         },
         {
             "name": "TegraRcmGUI (Cài trên PC)", 
@@ -152,7 +198,7 @@ DATA_VI = {
         },
         {
             "name": "Ultrahand (Overlay mạnh mẽ)", 
-            "desc": "Một trình quản lý Overlay khác tương tự Tesla nhưng giao diện hiện đại hơn. Dùng để quản lý các plugin overlay như nghe nhạc, cheat, fps...kích hoạt bằng (ZL+ZR+DDOWN )",
+            "desc": "Một trình quản lý Overlay khác tương tự Tesla nhưng giao diện hiện đại hơn. Dùng để quản lý các plugin overlay như nghe nhạc, cheat, fps...kích hoạt bằng (ZL+ZR+DDOWN) hoặc đôi khi là (L + Dpad Down + R3) ",
             "urls": {"Tự động cài đặt (Combo)": "ULTRAHAND_ACTION"}
         },
         {
@@ -198,6 +244,11 @@ DATA_VI = {
             "urls": {"Tự động cài đặt": "https://github.com/fortheusers/hb-appstore/releases/download/v2.3.2/appstore.nro"}
         },
         {
+            "name": "AIO Switch Updater", 
+            "desc": "Công cụ cập nhật tất cả trong một ngay trên Switch. Tự động tải và cập nhật Atmosphere, Firmware, Cheat... trực tiếp qua Wifi mà không cần PC.",
+            "urls": {"Tự động cài đặt": "https://github.com/HamletDuFromage/aio-switch-updater/releases/download/2.23.3/aio-switch-updater.zip"}
+        },
+        {
             "name": "Edizon (Cheat)", 
             "desc": "Ứng dụng quản lý Save game và Cheat code mạnh mẽ. Dùng để sao lưu save game ra thẻ nhớ hoặc kích hoạt các mã gian lận.",
             "urls": {"Tự động cài đặt": "https://github.com/WerWolv/EdiZon/releases/download/v3.1.0/EdiZon.nro"}
@@ -238,6 +289,23 @@ DATA_VI = {
             "urls": {
                 "Bước 1. Tải về file": "https://dlhb.gamebrew.org/switchhomebrews/linkalhonx.7z",
                 "Bước 2. Chọn file nén để tự động chép.": "ACTION_LINKALHO_NESTED"
+            }
+        },
+      
+        {
+            "name": "Combo: Theme Installer + Themezer", 
+            "desc": "Cài đặt cùng lúc 2 ứng dụng: NXThemes Installer (Quản lý/Cài theme) và Themezer-NX (Tải theme online).",
+            "urls": {
+                "Theme installer + Themezer": "THEME_COMBO_ACTION",
+                "🌐 Mở trang download": "https://github.com/exelix11/SwitchThemeInjector/releases"
+            }
+        },
+        {
+            "name": "Battery Desync Fix (Sửa Pin ảo)", 
+            "desc": "Công cụ hiệu chỉnh lại hiển thị phần trăm pin khi bị báo sai (Pin ảo).",
+            "urls": {
+                "Tự động cài đặt": "https://github.com/CTCaer/battery_desync_fix_nx/releases/download/1.5.1/battery_desync_fix_v1.5.1.nro",
+                "📖 Hướng dẫn sử dụng": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap/hieu-chuan-pin-ao"
             }
         },
     ],
@@ -360,7 +428,10 @@ DATA_EN = {
         {
             "name": "Atmosphere (CFW)", 
             "desc": "Most popular Custom Firmware for Switch. Core platform for running Homebrew, Mods, and Pirated games.",
-            "urls": {"Auto Install": "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.10.1/atmosphere-1.10.1-master-21c0f75a2+hbl-2.4.5+hbmenu-3.6.1.zip"}
+            "urls": {
+                "Auto Install (Latest)": "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.10.1/atmosphere-1.10.1-master-21c0f75a2+hbl-2.4.5+hbmenu-3.6.1.zip",
+                "Atmosphere 1.9.5 (Recommended)": "ACTION_AMS_195"
+            }
         },
         {
             "name": "TegraRcmGUI (PC App)", 
@@ -430,6 +501,11 @@ DATA_EN = {
             "urls": {"Auto Install": "https://github.com/fortheusers/hb-appstore/releases/download/v2.3.2/appstore.nro"}
         },
         {
+            "name": "AIO Switch Updater", 
+            "desc": "All-in-one updater tool directly on Switch. Download/Update Atmosphere, Firmware, Cheats... via Wifi without PC.",
+            "urls": {"Auto Install": "https://github.com/HamletDuFromage/aio-switch-updater/releases/download/2.23.3/aio-switch-updater.zip"}
+        },
+        {
             "name": "Edizon (Cheat)", 
             "desc": "Save game manager and Cheat code tool. Backup save files or activate cheat codes.",
             "urls": {"Auto Install": "https://github.com/WerWolv/EdiZon/releases/download/v3.1.0/EdiZon.nro"}
@@ -470,6 +546,32 @@ DATA_EN = {
             "urls": {
                 "Step 1. Download file": "https://dlhb.gamebrew.org/switchhomebrews/linkalhonx.7z",
                 "Step 2. Pick Zip to Auto Install": "ACTION_LINKALHO_NESTED"
+            }
+        },
+        {
+            "name": "Themezer (NXThemes Installer)", 
+            "desc": "Themes manager and installer for Switch. Browse and install themes directly from Themezer.",
+            "urls": {"Auto Install": "https://github.com/exelix11/SwitchThemeInjector/releases/download/v4.7.1/NXThemesInstaller.nro"}
+        },
+        {
+            "name": "NX Installer", 
+            "desc": "Installation tool for software packages or games.",
+            "urls": {"Auto Install": "PASTE_YOUR_DOWNLOAD_LINK_HERE"}
+        },
+        {
+            "name": "Combo: Theme Installer + Themezer", 
+            "desc": "Installs both: NXThemes Installer (Theme Manager) and Themezer-NX (Online Theme Downloader).",
+            "urls": {
+                "Theme installer + Themezer": "THEME_COMBO_ACTION",
+                "🌐 Open Download Page": "https://github.com/exelix11/SwitchThemeInjector/releases"
+            }
+        },
+        {
+            "name": "Battery Desync Fix", 
+            "desc": "Calibrate battery percentage display when it shows incorrect values.",
+            "urls": {
+                "Auto Install": "https://github.com/CTCaer/battery_desync_fix_nx/releases/download/1.5.1/battery_desync_fix_v1.5.1.nro",
+                "📖 Usage Guide": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap/hieu-chuan-pin-ao"
             }
         },
     ],
@@ -612,7 +714,7 @@ class ToolTip:
 
         label = tk.Label(frame, text=self.text, justify='left',
                        background="#ffffe0", foreground="#333",
-                       font=("Segoe UI", 9), wraplength=300)
+                       font=("Segoe UI", 9), wraplength=400) # Tăng width cho tooltip dài
         label.pack(padx=5, pady=2)
 
     def hidetip(self):
@@ -626,10 +728,9 @@ class SwitchToolApp:
         self.root = root
         self.lang_code = "VI" # Mặc định tiếng Việt
         
-        # --- THIẾT LẬP ICON WINDOWS TASKBAR ---
+        # --- FIX ICON TASKBAR (PHẦN 2): Set Icon ngay khi init ---
         try:
-            myappid = 'mycompany.switch.update.manager.pro'
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+            self.root.iconbitmap(resource_path("icon.ico"))
         except: pass
 
         self.setup_window()
@@ -655,12 +756,6 @@ class SwitchToolApp:
         self.root.geometry(f'{width}x{height}+{x}+{y}')
 
     def setup_window(self):
-        # Icon App
-        # [SỬA] Dùng resource_path để tìm đúng icon khi chạy file exe
-        try:
-            self.root.iconbitmap(resource_path("icon.ico"))
-        except: pass
-        
         # --- CẬP NHẬT GIAO DIỆN KHÔNG BỊ CHE ---
         
         # 1. Lấy kích thước màn hình
@@ -716,6 +811,13 @@ class SwitchToolApp:
                         font=("Segoe UI", 9, "bold"), borderwidth=0)
         style.map("Accent.TButton", 
                   background=[('active', COLOR_ACCENT_HOVER), ('pressed', "#003e66")])
+
+        # Style cho nút Vàng (Atmosphere Recommended)
+        style.configure("Gold.TButton", 
+                        background=COLOR_GOLD, foreground="#333333", 
+                        font=("Segoe UI", 9, "bold"), borderwidth=0)
+        style.map("Gold.TButton", 
+                  background=[('active', "#ffea70"), ('pressed', "#ccac00")])
 
         style.configure("Web.TButton", 
                         background="#333333", foreground="#aaaaaa", 
@@ -780,8 +882,6 @@ class SwitchToolApp:
         # [QUAN TRỌNG] Chạy init task trước
         threading.Thread(target=self.run_init_tasks, daemon=True).start()
 
-        # [QUAN TRỌNG] Bắt buộc chạy hàm update animation kể cả khi không có gif
-        # Để nó có thể check cờ is_app_ready và chuyển cảnh
         self.update_loading_animation(0)
 
     def update_loading_animation(self, frame_index):
@@ -806,10 +906,6 @@ class SwitchToolApp:
             self.loading_frame.destroy() 
             self.setup_ui() 
             self.check_for_updates()
-
-    # ... [PHẦN CÒN LẠI CỦA CODE GIỮ NGUYÊN NHƯ CŨ] ...
-    # Để tiết kiệm không gian, tôi chỉ liệt kê phần thay đổi quan trọng ở trên.
-    # Bạn hãy giữ nguyên các hàm bên dưới từ toggle_language trở đi nhé.
     
     def toggle_language(self):
         if self.lang_code == "VI":
@@ -844,14 +940,16 @@ class SwitchToolApp:
     + Cách 1: Cắm thẻ nhớ Switch vào máy tính hoặc qua đầu đọc thẻ.
     + Cách 2: Kết nối Switch qua dây USB Type C thông qua Hekate. Để vào Hekate, bạn cần tắt nguồn Switch hoàn toàn, rồi mở nguồn lên lại (hoặc giữ nút giảm âm lượng khi mở), sau đó vào Tools>Usb Tools>SD card, tiếp theo thực hiện cắm dây USB Type C
    Lưu ý 1: Nếu bạn dùng Hekate USB Tools, hãy Eject thẻ nhớ ra khỏi máy trước khi ngắt kết nối cáp USB.
-   Lưu ý 2: Không thể dùng DBI hoặc các MTP Responder để thực hiện các cập nhật cho gói hack. Hãy sử dụng chế độ USB Mass Storage (UMS) trong Hekate.
-   - Tại mục "Thẻ nhớ (Root)", bấm "Chọn" để trỏ đến ổ đĩa thẻ nhớ của bạn.
+   Lưu ý 2: MTP Responder (DBI) chỉ nên dùng để tải ứng dụng/game, KHÔNG NÊN dùng để cài file hack hệ thống (Atmosphere, Hekate) vì có thể gây lỗi.
+   - Tại mục "Chọn thư mục điểm đến", bấm "Chọn" để trỏ đến ổ đĩa thẻ nhớ của bạn.
    - Nếu không biết ổ nào, bấm "Auto 🔄" để phần mềm quét giúp bạn.
    - Nếu có thắc mắc gì về bất cứ tính năng nào, hãy trỏ chuột vào biểu tượng dấu chấm hỏi (?) để xem hướng dẫn nhanh.
+
 2. CÁCH TẢI VÀ CÀI ĐẶT:
    - Danh sách được chia thành các nhóm: File Hack, Sysmod, Homebrew...
    - Nút XANH (⚡ Tự động cài): Phần mềm sẽ tự tải file về và giải nén thẳng vào thẻ nhớ. Bạn không cần làm gì thêm.
-   - Nút XÁM (Web/Link): Sẽ mở trình duyệt web để bạn đọc hướng dẫn hoặc tải thủ công (đối với các file không cho tải trực tiếp).
+   - Nút VÀNG (Atmosphere): Bản ổn định khuyến nghị dùng.
+   - Nút XÁM (Web/Link): Sẽ mở trình duyệt web để bạn đọc hướng dẫn hoặc tải thủ công.
    - Nút MŨI TÊN XANH (⬇️ Tải tất cả): Tự động tải lần lượt mọi thứ trong danh mục đó.
 
 3. SỬA LỖI (FIX):
@@ -860,18 +958,18 @@ class SwitchToolApp:
 
 ------------------------------------------------
 
-
-
 *** ENGLISH SECTION ***
 
 1. PREPARATION:
    - Insert your Switch SD card into PC (or connect via USB).
-   - At "SD Card (Root)", click "Browse" to select your SD card drive.
+   - Click "Browse" to select your SD card drive.
    - Click "Auto Detect" if you are unsure which drive it is.
+   - NOTE: Do NOT use DBI MTP Responder for installing Core Hack files (Atmosphere). Use it only for Homebrew/Games.
 
 2. HOW TO INSTALL:
    - Apps are categorized into: Hack Files, Sysmods, Homebrew...
    - BLUE Button (⚡ Auto Install): The tool automatically downloads and extracts files to your SD card. No extra steps needed.
+   - GOLD Button: Recommended stable version.
    - GREY Button (Web/Link): Opens a web browser for instructions or manual download sources.
    - DOWN ARROW Button (⬇️ Download All): Automatically downloads everything in that category one by one.
 
@@ -936,7 +1034,7 @@ class SwitchToolApp:
         btn_lang = ttk.Button(sub_btn_frame, text=lang_text, style="Lang.TButton", width=12, command=self.toggle_language)
         btn_lang.pack(side="right", padx=2)
 
-        # LOGO IMAGE (Nằm dưới nút bấm)
+        # LOGO IMAGE
         try:
             if hasattr(self, 'preloaded_logo_image') and self.preloaded_logo_image:
                  self.logo_img = ImageTk.PhotoImage(self.preloaded_logo_image)
@@ -955,13 +1053,21 @@ class SwitchToolApp:
             pass
 
         # =========================================================================
-        # 2. PATH SELECTION ROW (Tách riêng ra để Full Width)
+        # 2. PATH SELECTION ROW
         # =========================================================================
         path_frame = tk.Frame(self.root, bg=COLOR_BG, pady=5, padx=20)
-        path_frame.pack(fill="x", side="top") # Pack ngay sau Header
+        path_frame.pack(fill="x", side="top") 
         
-        tk.Label(path_frame, text=text_db["path_label"], bg=COLOR_BG, fg="#dddddd", font=("Segoe UI", 10, "bold")).pack(side="left")
+        # [CẬP NHẬT] Thêm Tooltip dấu chấm hỏi và sửa label
+        path_lbl_container = tk.Frame(path_frame, bg=COLOR_BG)
+        path_lbl_container.pack(side="left")
+
+        tk.Label(path_lbl_container, text=text_db["path_label"], bg=COLOR_BG, fg="#dddddd", font=("Segoe UI", 10, "bold")).pack(side="left")
         
+        lbl_path_help = tk.Label(path_lbl_container, text="❓", font=("Segoe UI", 10), bg=COLOR_BG, fg=COLOR_INFO, cursor="hand2")
+        lbl_path_help.pack(side="left", padx=5)
+        ToolTip(lbl_path_help, text_db["path_tip"])
+
         entry_path = tk.Entry(path_frame, textvariable=self.dest_path, bg=COLOR_CARD, fg="white", insertbackground="white", relief="flat", font=("Consolas", 11))
         entry_path.pack(side="left", fill="x", expand=True, padx=10, ipady=5)
         
@@ -995,7 +1101,7 @@ class SwitchToolApp:
         for cat in categories:
             items = data_db[cat]
             header_frame = tk.Frame(self.scroll_frame, bg=COLOR_HEADER_BG, pady=5)
-            header_frame.pack(fill="x", pady=(15, 5), padx=5) # Giảm padding top chút
+            header_frame.pack(fill="x", pady=(15, 5), padx=5) 
             
             tk.Label(header_frame, text=cat, font=FONT_HEADER, bg=COLOR_HEADER_BG, fg=COLOR_GOLD, anchor="w").pack(side="left", padx=10)
             
@@ -1024,41 +1130,35 @@ class SwitchToolApp:
         info_line = tk.Frame(bot, bg=COLOR_CARD)
         info_line.pack(fill="x")
         
-        # Tăng kích thước font chữ status để dễ nhìn hơn
         self.status_label = tk.Label(info_line, text=text_db["status_ready"], bg=COLOR_CARD, fg=COLOR_ACCENT, font=("Segoe UI", 12, "bold"))
         self.status_label.pack(side="left")
-        # --- [NEW] NÚT BÁO LỖI ---
+        
         btn_bug_report = tk.Button(info_line, text="🐞 Góp ý & báo lỗi (Bug&Report)", 
                                    font=("Segoe UI", 9, "bold"), 
-                                   bg=COLOR_CARD, fg="#E06C75", # Màu đỏ nhạt cho dễ nhìn trên nền tối
+                                   bg=COLOR_CARD, fg="#E06C75", 
                                    activebackground="#3e3e42", activeforeground="#ff5555",
                                    bd=0, cursor="hand2",
                                    command=lambda: webbrowser.open("https://rebrand.ly/bugrp"))
         btn_bug_report.pack(side="right")
-        # -------------------------
 
-    # --- AUTO UPDATE LOGIC (NEW) ---
+    # --- AUTO UPDATE LOGIC ---
     def check_for_updates(self):
-        # Hàm kiểm tra cập nhật từ GitHub
         threading.Thread(target=self._process_check_update, daemon=True).start()
 
     def _process_check_update(self):
         self.status_label.config(text="Checking for updates...", fg=COLOR_INFO)
         api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-        
         try:
             r = requests.get(api_url, timeout=10)
             if r.status_code == 200:
                 data = r.json()
                 latest_tag = data.get("tag_name", "v0.0.0")
                 download_url = ""
-                # Tìm file asset có đuôi .exe
                 for asset in data.get("assets", []):
                     if asset["name"].endswith(".exe"):
                         download_url = asset["browser_download_url"]
                         break
                 
-                # So sánh phiên bản (đơn giản bằng chuỗi)
                 if latest_tag != f"v{APP_VERSION}" and latest_tag > f"v{APP_VERSION}":
                     msg = f"Đã có phiên bản mới: {latest_tag}\nBạn có muốn cập nhật ngay không?"
                     if messagebox.askyesno("Update Available", msg):
@@ -1073,17 +1173,13 @@ class SwitchToolApp:
                 messagebox.showerror("Error", "Không thể kiểm tra cập nhật (Repo chưa public hoặc lỗi mạng).")
         except Exception as e:
             messagebox.showerror("Error", f"Lỗi kiểm tra cập nhật: {e}")
-        
         self.status_label.config(text="Ready", fg=COLOR_ACCENT)
 
     def perform_update_download(self, url):
-        # Tải file update về và tạo script thay thế
         self.status_label.config(text="Downloading update...", fg=COLOR_WARNING)
         try:
             r = requests.get(url, stream=True)
             total_size = int(r.headers.get('content-length', 0))
-            
-            # Tên file mới tải về
             new_exe_name = "SwitchManager_New.exe"
             with open(new_exe_name, 'wb') as f:
                 downloaded = 0
@@ -1094,8 +1190,6 @@ class SwitchToolApp:
                         self.progress_var.set((downloaded / total_size) * 100)
             
             self.status_label.config(text="Installing update...", fg=COLOR_SUCCESS)
-            
-            # Tạo file .bat để thay thế file đang chạy
             current_exe = sys.executable
             bat_script = f"""
 @echo off
@@ -1107,22 +1201,17 @@ del "%~f0"
 """
             with open("update_script.bat", "w") as bat:
                 bat.write(bat_script)
-            
             messagebox.showinfo("Update", "Phần mềm sẽ khởi động lại để hoàn tất cập nhật.")
-            
-            # Chạy file bat và tắt phần mềm
             subprocess.Popen("update_script.bat", shell=True)
             self.root.quit()
-
         except Exception as e:
             messagebox.showerror("Update Error", f"Lỗi cập nhật: {e}")
 
-    # --- CÁC HÀM CŨ GIỮ NGUYÊN ---
+    # --- CÁC HÀM TẠO UI ---
     def create_item_card(self, parent, item):
         card = ttk.Frame(parent, style="Card.TFrame", padding=10)
         card.pack(fill="x", pady=4, padx=10)
         
-        # Name & Info
         name_frame = tk.Frame(card, bg=COLOR_CARD)
         name_frame.pack(side="left", fill="x", expand=True)
         
@@ -1137,7 +1226,6 @@ del "%~f0"
         btn_box = ttk.Frame(card, style="Card.TFrame")
         btn_box.pack(side="right")
 
-        # Logic nút bấm đặc biệt
         if "Việt hóa game" in item["name"] or "Game Translation" in item["name"]:
             txt = "⚡ Auto Install" if self.lang_code == "EN" else "⚡ Cài đặt thông minh"
             ttk.Button(btn_box, text=txt, style="Smart.TButton", command=self.install_translation_pack).pack(side="left", padx=4)
@@ -1145,7 +1233,6 @@ del "%~f0"
             txt = "⚡ Auto Install" if self.lang_code == "EN" else "⚡Chọn file nén để tự động chép."
             ttk.Button(btn_box, text=txt, command=self.install_firmware_local).pack(side="left", padx=4)
 
-        # Biến để kiểm tra xem đã có link web nào chưa
         has_manual_web_link = False
 
         for lbl, url in item["urls"].items():
@@ -1157,6 +1244,12 @@ del "%~f0"
                 cmd = self.install_linkalho_special
             elif url == "ACTION_PICK_ZIP":
                 cmd = lambda n=item["name"]: self.install_local_zip_generic(n)
+            elif url == "ACTION_AMS_195":
+                cmd = self.install_ams_195_logic
+            # --- LOGIC COMBO MỚI ---
+            elif url == "THEME_COMBO_ACTION":
+                cmd = self.install_theme_combo
+            # -----------------------
             elif url.startswith("ACTION_SAVE_PC|"):
                 actual_url = url.split("|")[1]
                 cmd = lambda u=actual_url: self.download_pc_file_generic(u)
@@ -1171,7 +1264,6 @@ del "%~f0"
             display_text = lbl
             is_web = "Web" in lbl or "Link" in lbl or "Hướng dẫn" in lbl or "Guide" in lbl or "GBAtemp" in lbl or "Cộng Đồng" in lbl or "TheTechGame" in lbl or "CheatSlips" in lbl or "Link tham khảo" in lbl
             
-            # Logic mới cho các nút tải bước 1
             if "Bước 1" in lbl or "Step 1" in lbl:
                  is_web = True
 
@@ -1179,6 +1271,14 @@ del "%~f0"
                 if "Fix" in url: 
                     display_text = lbl
                     btn_style = "Accent.TButton" 
+                elif url == "ACTION_AMS_195":
+                    display_text = "✨ " + lbl
+                    btn_style = "Gold.TButton"
+                # --- SỬA LOGIC HIỂN THỊ NÚT COMBO THEME ---
+                elif url == "THEME_COMBO_ACTION":
+                    display_text = "⚡ " + lbl  # Thêm icon tia sét
+                    btn_style = "Accent.TButton" # Ép kiểu nút Xanh dương
+                # ------------------------------------------
                 elif "Tự động" in lbl or "Auto" in lbl or "Tải" in lbl or "Download" in lbl or "Chọn" in lbl or "Pick" in lbl:
                     display_text = "⚡ " + lbl
                     btn_style = "Accent.TButton"
@@ -1189,31 +1289,22 @@ del "%~f0"
                 btn_style = "Accent.TButton"
             else:
                 btn_style = "Web.TButton"
-                has_manual_web_link = True # Đánh dấu là đã có nút web thủ công
+                has_manual_web_link = True 
 
             ttk.Button(btn_box, text=display_text, style=btn_style, command=cmd).pack(side="left", padx=2)
 
-        # --- [TÍNH NĂNG MỚI] TỰ ĐỘNG THÊM NÚT "MỞ TRANG DOWNLOAD" ---
-        # Logic: Quét các link tải, nếu thấy GitHub release thì tự suy ra link trang chủ
+        # TỰ ĐỘNG THÊM NÚT "MỞ TRANG DOWNLOAD"
         detected_source_url = None
         for u in item["urls"].values():
-            # Nếu là link tải trực tiếp từ GitHub (chứa releases/download)
             if "github.com" in u and "/releases/download/" in u:
-                # Cắt chuỗi để lấy link thư mục releases
-                # VD: .../releases/download/v1.0/file.zip -> .../releases
                 detected_source_url = u.split("/releases/download/")[0] + "/releases"
                 break
-            # Nếu là link Github thông thường (không phải file zip, không phải Action)
             elif "github.com" in u and "ACTION" not in u and ".zip" not in u and ".nro" not in u:
                  detected_source_url = u
                  break
 
-        # Chỉ thêm nút nếu tìm thấy link và (tùy chọn) chưa có nút Web nào khác để tránh trùng lặp
-        # Ở đây tôi để hiện luôn để đảm bảo có nút "Download Page" như bạn yêu cầu
         if detected_source_url:
             txt_dl_page = "🌐 Download Page" if self.lang_code == "EN" else "🌐 Mở trang download"
-            
-            # Kiểm tra xem nút này đã tồn tại chưa để tránh trùng 2 nút dẫn đến cùng 1 link
             is_duplicate = False
             for existing_url in item["urls"].values():
                 if existing_url == detected_source_url:
@@ -1222,6 +1313,65 @@ del "%~f0"
             if not is_duplicate:
                 ttk.Button(btn_box, text=txt_dl_page, style="Web.TButton", 
                            command=lambda u=detected_source_url: webbrowser.open(u)).pack(side="left", padx=2)
+       
+
+    # --- [HÀM MỚI] XỬ LÝ NÚT ATMOSPHERE 1.9.5 ---
+    def install_ams_195_logic(self):
+        text_db = UI_TEXT[self.lang_code]
+        
+        # Tạo cửa sổ Dialog tùy chỉnh để có nút Hướng dẫn
+        dialog = tk.Toplevel(self.root)
+        dialog.title(text_db["ams_195_title"])
+        dialog.geometry("600x550")
+        dialog.configure(bg=COLOR_CARD)
+        
+        # Căn giữa dialog
+        x = self.root.winfo_x() + (self.root.winfo_width()//2) - 300
+        y = self.root.winfo_y() + (self.root.winfo_height()//2) - 275
+        dialog.geometry(f"+{x}+{y}")
+        
+        # Tiêu đề
+        tk.Label(dialog, text="⚠️ ATTENTION / CHÚ Ý", font=("Segoe UI", 14, "bold"), fg=COLOR_GOLD, bg=COLOR_CARD).pack(pady=10)
+        
+        # Nội dung (Scrolled Text để hiển thị đầy đủ)
+        msg_frame = tk.Frame(dialog, bg=COLOR_CARD, padx=10)
+        msg_frame.pack(fill="both", expand=True)
+        
+        st = scrolledtext.ScrolledText(msg_frame, height=18, font=("Segoe UI", 10), bg="#1e1e1e", fg="white", relief="flat")
+        st.pack(fill="both", expand=True)
+        st.insert(tk.END, text_db["ams_195_msg"])
+        st.config(state=tk.DISABLED)
+        
+        # Nút Hướng Dẫn Maintenance
+        guide_url = "https://nsw.gitbook.io/guide/cac-loi-thuong-gap/xoa-thong-bao-update-firmware" # Link gốc như yêu cầu
+        btn_guide = ttk.Button(dialog, text=text_db["btn_maintenance_guide"], style="TButton", 
+                               command=lambda: webbrowser.open(guide_url))
+        btn_guide.pack(pady=10)
+        
+        # Frame nút OK/Cancel
+        btn_frame = tk.Frame(dialog, bg=COLOR_CARD, pady=10)
+        btn_frame.pack(fill="x", side="bottom")
+        
+        def on_confirm():
+            dialog.destroy()
+            # Link tải Atmosphere 1.9.5
+            url = "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.9.5/atmosphere-1.9.5-master-de9b02007+hbl-2.4.4+hbmenu-3.6.0.zip"
+            threading.Thread(target=self.download_task, args=("Atmosphere 1.9.5", url), daemon=True).start()
+            
+        def on_cancel():
+            dialog.destroy()
+
+        ttk.Button(btn_frame, text="✅ OK, Download & Install", style="Accent.TButton", command=on_confirm).pack(side="right", padx=20)
+        ttk.Button(btn_frame, text="❌ Cancel", style="TButton", command=on_cancel).pack(side="right", padx=10)
+
+    # --- [SỬA ĐỔI] HÀM BROWSE FOLDER VỚI CẢNH BÁO MTP ---
+    def browse_folder(self):
+        d = filedialog.askdirectory()
+        if d: 
+            self.dest_path.set(d)
+            # Hiện cảnh báo MTP nếu người dùng chọn thư mục (có thể là DBI)
+            text_db = UI_TEXT[self.lang_code]
+            messagebox.showwarning("MTP Responder Warning", text_db["msg_mtp_warning"])
 
     def download_category_all(self, category_name):
         data_db = DATA_VI if self.lang_code == "VI" else DATA_EN
@@ -1246,6 +1396,10 @@ del "%~f0"
                     continue
 
                 if "ACTION_SAVE_PC" in url or "ACTION_PICK_ZIP" in url or "ACTION_FIX" in url:
+                    continue
+                
+                # Bỏ qua nút Atmosphere đặc biệt khi tải tất cả để tránh hiện popup liên tục
+                if "ACTION_AMS_195" in url:
                     continue
 
                 if url == "TESLA_ACTION":
@@ -1319,10 +1473,6 @@ del "%~f0"
                          kwargs={'custom_save_path': save_path, 'auto_run': True}, 
                          daemon=True).start()
 
-    def browse_folder(self):
-        d = filedialog.askdirectory()
-        if d: self.dest_path.set(d)
-
     def open_root_folder(self):
         path = self.dest_path.get()
         if os.path.exists(path):
@@ -1338,7 +1488,6 @@ del "%~f0"
             self.status_label.config(text=f"Open Web: {name}", fg=COLOR_ACCENT)
             return
         
-        # Nút "Bước 1" cũng là mở web
         if "Bước 1" in label or "Step 1" in label:
              webbrowser.open(url)
              self.status_label.config(text=f"Open Download: {name}", fg=COLOR_ACCENT)
@@ -1372,6 +1521,19 @@ del "%~f0"
         self.download_task("Ultrahand Loader", url1, silent_success=True)
         url2 = "https://github.com/ppkantorski/Ultrahand-Overlay/releases/latest/download/ovlmenu.ovl"
         self.download_task("Ultrahand Overlay", url2)
+    # --- [NEW] LOGIC COMBO THEME ---
+    def install_theme_combo(self):
+        root_path = self.dest_path.get()
+        threading.Thread(target=self.run_theme_combo_thread, args=(root_path,), daemon=True).start()
+
+    def run_theme_combo_thread(self, root_path):
+        # App 1: NXThemes Installer
+        url1 = "https://github.com/exelix11/SwitchThemeInjector/releases/download/v4.8.3/NXThemesInstaller.nro"
+        self.download_task("NXThemes Installer", url1, silent_success=True)
+        
+        # App 2: Themezer-NX (như link bạn cung cấp)
+        url2 = "https://github.com/suchmememanyskill/themezer-nx/releases/download/2.0.3/themezer-nx.nro"
+        self.download_task("Themezer-NX", url2)
 
     def download_task(self, name, url, silent_success=False, custom_save_path=None, auto_run=False):
         try:
@@ -1488,10 +1650,10 @@ del "%~f0"
         root_path = self.dest_path.get()
         if not os.path.exists(root_path): return messagebox.showwarning("Warning", "Select Root first!")
         
-        # [CẬP NHẬT] Cho phép chọn Zip, Rar, 7z
         file_path = filedialog.askopenfilename(filetypes=[("Compressed Files", "*.zip *.rar *.7z")])
         
         if file_path: threading.Thread(target=self.extract_simple, args=(file_path, root_path, label_name), daemon=True).start()
+    
     def install_firmware_local(self):
         root_path = self.dest_path.get()
         if not os.path.exists(root_path): return messagebox.showwarning("Warning", "Select Root first!")
@@ -1508,17 +1670,13 @@ del "%~f0"
             extracted_ok = False
             f_lower = file_path.lower()
 
-            # TRƯỜNG HỢP 1: File ZIP (Dùng thư viện có sẵn của Python cho nhanh)
             if f_lower.endswith(".zip"):
                 with zipfile.ZipFile(file_path, 'r') as z: z.extractall(target_dir)
                 extracted_ok = True
 
-            # TRƯỜNG HỢP 2: File 7z hoặc RAR
             elif f_lower.endswith((".7z", ".rar")):
-                # Ưu tiên 1: Dùng WinRAR/7-Zip cài trên máy (qua hàm có sẵn extract_archive_external)
                 extracted_ok = self.extract_archive_external(file_path, target_dir)
                 
-                # Ưu tiên 2: Nếu không có WinRAR/7-Zip, thử dùng thư viện Python (nếu có)
                 if not extracted_ok:
                     if f_lower.endswith(".7z"):
                         try:
@@ -1546,21 +1704,18 @@ del "%~f0"
                  messagebox.showinfo("Success", f"Installed {label}")
 
         except Exception as e: messagebox.showerror("Error", str(e))
-    # [HÀM MỚI 1] Sự kiện khi bấm nút
+    
     def install_linkalho_special(self):
         root_path = self.dest_path.get()
         if not os.path.exists(root_path): return messagebox.showwarning("Warning", "Select Root first!")
-        # Cho phép chọn mọi loại nén
         file_path = filedialog.askopenfilename(filetypes=[("Compressed Files", "*.zip *.rar *.7z")])
         if file_path: 
             threading.Thread(target=self.process_linkalho_task, args=(file_path, root_path), daemon=True).start()
 
-    # [HÀM MỚI 2] Xử lý giải nén lồng nhau (Nested Extraction)
     def process_linkalho_task(self, source_file, root_path):
         try:
             self.root.after(0, lambda: self.status_label.config(text="Processing Linkalho...", fg=COLOR_WARNING))
             
-            # Tạo thư mục tạm
             temp_outer = os.path.join(root_path, "temp_linkalho_outer")
             temp_inner = os.path.join(root_path, "temp_linkalho_inner")
             if os.path.exists(temp_outer): shutil.rmtree(temp_outer)
@@ -1568,15 +1723,12 @@ del "%~f0"
             os.makedirs(temp_outer)
             os.makedirs(temp_inner)
 
-            # --- GIAI ĐOẠN 1: Giải nén File Mẹ (file vừa chọn) ---
             if not self.helper_extract_any(source_file, temp_outer):
                  raise Exception("Không thể giải nén file mẹ. Cần WinRAR/7Zip.")
 
-            # --- GIAI ĐOẠN 2: Tìm file nén con (linkalho-v2.0.1...) ---
             inner_archive = None
             for root, dirs, files in os.walk(temp_outer):
                 for f in files:
-                    # Tìm file có tên chứa 'linkalho' và là file nén
                     if "linkalho" in f.lower() and f.lower().endswith((".zip", ".rar", ".7z")):
                         inner_archive = os.path.join(root, f)
                         break
@@ -1585,11 +1737,9 @@ del "%~f0"
             if not inner_archive:
                 raise Exception("Không tìm thấy file nén con (linkalho-v...zip/rar/7z) bên trong.")
 
-            # --- GIAI ĐOẠN 3: Giải nén File Con ---
             if not self.helper_extract_any(inner_archive, temp_inner):
                  raise Exception("Không thể giải nén file con bên trong.")
 
-            # --- GIAI ĐOẠN 4: Tìm file .nro và chép vào switch/ ---
             nro_found = False
             switch_dir = os.path.join(root_path, "switch")
             if not os.path.exists(switch_dir): os.makedirs(switch_dir)
@@ -1601,7 +1751,6 @@ del "%~f0"
                         shutil.copy2(src_nro, switch_dir)
                         nro_found = True
             
-            # Dọn dẹp file rác
             try:
                 shutil.rmtree(temp_outer)
                 shutil.rmtree(temp_inner)
@@ -1617,16 +1766,13 @@ del "%~f0"
             self.root.after(0, lambda: self.status_label.config(text="Error", fg="red"))
             messagebox.showerror("Error", str(e))
 
-    # [HÀM PHỤ] Hỗ trợ giải nén đa năng (tái sử dụng logic của extract_simple)
     def helper_extract_any(self, file_path, target_dir):
         f_lower = file_path.lower()
         extracted = False
         
-        # 1. Thử dùng 7-Zip/WinRAR hệ thống trước (Mạnh nhất)
         if self.extract_archive_external(file_path, target_dir):
             return True
 
-        # 2. Nếu thất bại, thử dùng thư viện Python
         if f_lower.endswith(".zip"):
             try:
                 with zipfile.ZipFile(file_path, 'r') as z: z.extractall(target_dir)
@@ -1652,22 +1798,18 @@ del "%~f0"
         root_path = self.dest_path.get()
         if not os.path.exists(root_path): return messagebox.showwarning("Warning", "Select Root first!")
         
-        # Tạo cửa sổ chọn
         win = tk.Toplevel(self.root)
         win.title("Chọn nguồn cài đặt")
         
-        # FIX 2: Tăng chiều rộng và chiều cao lên 500x220 để không bị cắt chữ
         win.geometry("500x220") 
         win.configure(bg=COLOR_CARD)
         
-        # Canh giữa popup (tính lại theo kích thước mới 500x220)
         x = self.root.winfo_x() + (self.root.winfo_width()//2) - 250
         y = self.root.winfo_y() + (self.root.winfo_height()//2) - 110
         win.geometry(f"+{x}+{y}")
 
         tk.Label(win, text="Bạn muốn chọn File Nén hay Thư Mục?", bg=COLOR_CARD, fg="white", font=("Segoe UI", 11)).pack(pady=(20, 5))
         
-        # FIX 2 (Tiếp): Thêm wraplength=480 để text tự xuống dòng nếu quá dài
         tk.Label(win, text="(Hệ thống sẽ tự nhận diện ra file việt hóa trong thư mục để chép vào thẻ nhớ)", 
                  bg=COLOR_CARD, fg="#aaaaaa", font=("Segoe UI", 9, "italic"), wraplength=480).pack(pady=(0, 10))
         
@@ -1687,30 +1829,22 @@ del "%~f0"
         ttk.Button(btn_frame, text="📄 File Nén (Zip/Rar...)", command=on_zip).pack(side="left", padx=10)
         ttk.Button(btn_frame, text="📂 Thư Mục (Folder)", command=on_folder).pack(side="left", padx=10)
 
-    # --- HÀM GIÚP: Giải nén bằng lệnh hệ thống (Tối ưu cho Windows User) ---
     def extract_archive_external(self, source_file, dest_dir):
         """Dùng WinRAR hoặc 7-Zip đã cài đặt để giải nén"""
         
-        # Đường dẫn phổ biến
         seven_zip_path = r"C:\Program Files\7-Zip\7z.exe"
         winrar_path = r"C:\Program Files\WinRAR\WinRAR.exe"
         
         cmd = None
         
         if os.path.exists(seven_zip_path):
-            # 7z command: x "file" -o"dest" -y
             cmd = [seven_zip_path, "x", source_file, f"-o{dest_dir}", "-y"]
-            print("Using 7-Zip...")
             
         elif os.path.exists(winrar_path):
-            # WinRAR command: x -ibck "file" "dest\"
-            # Lưu ý WinRAR cần dest có dấu \ ở cuối nếu muốn vào folder
             cmd = [winrar_path, "x", "-ibck", source_file, dest_dir + "\\"]
-            print("Using WinRAR...")
         
         if cmd:
             try:
-                # Chạy lệnh ẩn cửa sổ console
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                 
@@ -1725,32 +1859,25 @@ del "%~f0"
         try:
             self.root.after(0, lambda: self.status_label.config(text="Processing Translation...", fg=COLOR_WARNING))
             
-            # Hàm check ID Game chặt chẽ bằng Regex (Bắt đầu 0100 và đủ 16 ký tự hex)
             def is_game_id_strict(name):
-                # Chấp nhận đúng 16 ký tự hex bắt đầu bằng 0100
                 return bool(re.match(r'^0100[0-9A-Fa-f]{12}$', name))
 
-            # Xác định tên đầu vào (để xử lý trường hợp user chọn file zip trùng tên ID)
             input_name = os.path.basename(os.path.normpath(source))
             if source_type == "file":
-                # Nếu là file zip, lấy tên file bỏ đuôi (vd: 0100...zip -> 0100...)
                 input_name = os.path.splitext(input_name)[0]
 
             search_path = source
             temp_dir = ""
 
-            # Xử lý file nén
             if source_type == "file":
                 temp_dir = os.path.join(root_path, "temp_translation_extract")
                 if os.path.exists(temp_dir): shutil.rmtree(temp_dir)
                 os.makedirs(temp_dir)
 
-                # --- Ưu tiên 1: Dùng lệnh hệ thống ---
                 extracted_ok = False
                 if source.lower().endswith(".7z") or source.lower().endswith(".rar"):
                     extracted_ok = self.extract_archive_external(source, temp_dir)
                 
-                # --- Ưu tiên 2: Dùng thư viện Python ---
                 if not extracted_ok:
                     if source.lower().endswith(".zip"):
                         with zipfile.ZipFile(source, 'r') as z: z.extractall(temp_dir)
@@ -1772,39 +1899,30 @@ del "%~f0"
                 
                 search_path = temp_dir
 
-            # --- LOGIC CÀI ĐẶT THÔNG MINH ---
             contents_dir = os.path.join(root_path, "atmosphere", "contents")
             if not os.path.exists(contents_dir): os.makedirs(contents_dir)
             
             found_count = 0
 
-            # 1. TRƯỜNG HỢP: Tên file/folder chọn chính là ID Game
             if is_game_id_strict(input_name):
                 dest_game_path = os.path.join(contents_dir, input_name)
                 
-                # Nếu User chọn folder (không nén)
                 if source_type == "folder":
                     if os.path.exists(dest_game_path): shutil.rmtree(dest_game_path)
                     shutil.copytree(source, dest_game_path, dirs_exist_ok=True)
                     found_count = 1
                     
-                # Nếu User chọn file nén (đã giải nén vào temp_dir)
                 else: 
-                    # Kiểm tra xem bên trong temp_dir có folder con trùng tên ID không?
                     nested_path = os.path.join(temp_dir, input_name)
                     if os.path.exists(nested_path) and os.path.isdir(nested_path):
-                        # Trường hợp file zip: 0100...zip/0100.../romfs
                         if os.path.exists(dest_game_path): shutil.rmtree(dest_game_path)
                         shutil.copytree(nested_path, dest_game_path, dirs_exist_ok=True)
                         found_count = 1
                     else:
-                        # Trường hợp file zip: 0100...zip/romfs (Nội dung nằm ngay root zip)
-                        # Copy toàn bộ nội dung temp vào dest_game_path
                         if not os.path.exists(dest_game_path): os.makedirs(dest_game_path)
                         self.copy_tree_custom(temp_dir, dest_game_path)
                         found_count = 1
 
-            # 2. TRƯỜNG HỢP: Quét sâu (Deep Search) - Nếu tên file không phải ID hoặc quét hàng loạt
             else:
                 for root, dirs, files in os.walk(search_path):
                     for dirname in dirs[:]:
@@ -1815,9 +1933,8 @@ del "%~f0"
                             if os.path.exists(dest_game_path): shutil.rmtree(dest_game_path)
                             shutil.copytree(src_game_path, dest_game_path, dirs_exist_ok=True)
                             found_count += 1
-                            dirs.remove(dirname) # Không quét sâu vào ID game nữa
+                            dirs.remove(dirname)
 
-            # Dọn dẹp
             if temp_dir and os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
             
@@ -1831,10 +1948,6 @@ del "%~f0"
         except Exception as e:
             self.root.after(0, lambda: self.status_label.config(text="Error", fg="red"))
             messagebox.showerror("Error", str(e))
-
-    def is_game_id(self, name):
-        # Giữ lại hàm cũ để tương thích nếu có chỗ gọi, nhưng logic chính đã dùng is_game_id_strict bên trong
-        return bool(re.match(r'^[0-9a-fA-F]{16}$', name))
 
     def copy_tree_custom(self, src, dst):
         if not os.path.exists(dst): os.makedirs(dst)
@@ -1850,7 +1963,6 @@ del "%~f0"
             messagebox.showerror("Error", "Select SD Root first!")
             return
 
-        # LOGIC FIX: CÀI LẠI GÓI HACK
         if fix_type == "ACTION_FIX_REINSTALL_PACK":
             msg = "To fix completely, reinstall the AIO Pack.\nApp will scroll to top." if self.lang_code == "EN" else "Để sửa lỗi triệt để nhất, bạn nên cài lại gói hack chuẩn.\nPhần mềm sẽ đưa bạn đến mục trên cùng."
             messagebox.showinfo("Reinstall Pack", msg)
@@ -1925,15 +2037,7 @@ del "%~f0"
             messagebox.showerror("Fix Error", str(e))
 
 if __name__ == "__main__":
-    # [QUAN TRỌNG] Đặt ID cho App TRƯỚC khi tạo cửa sổ
-    # Việc này giúp Windows nhận diện icon dưới Taskbar ngay lập tức
-    try:
-        myappid = 'tsufu.switch.update.manager.pro.v1' 
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-    except: 
-        pass
-
-    # Sau đó mới tạo cửa sổ
+    # Mã đặt ID App đã được chuyển lên đầu file để đảm bảo Icon load đúng
     root = tk.Tk()
     app = SwitchToolApp(root)
     root.mainloop()
