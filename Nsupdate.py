@@ -16,7 +16,7 @@ from PIL import Image, ImageTk, ImageSequence
 
 # --- SET APP ID FOR TASKBAR ICON ---
 try:
-    myappid = 'tsufu.switch.update.manager.pro.v103'
+    myappid = 'tsufu.switch.update.manager.pro.v102'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 except: 
     pass
@@ -30,7 +30,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # --- CONFIG ---
-APP_VERSION = "1.0.3"
+APP_VERSION = "1.0.2"
 GITHUB_REPO = "tsufuwu/ns_tsufupdate_manager" 
 
 # --- COLORS ---
@@ -515,7 +515,7 @@ Please refer to the online guide or tooltips for detailed instructions.
                                 font=("Segoe UI", 9, "italic"), bg=COLOR_BG, fg="#dddddd", justify="left")
         lbl_credit_2.pack(side="top", anchor="w", pady=(2, 0))
         # --- THÊM MỚI: HIỂN THỊ THÔNG TIN PHIÊN BẢN ---
-        ver_info_text = "✨ Update 1.0.3 (25/12/2024): Hekate v6.4.2 | Atmosphere 1.10.1 | Sigpatches v1.10.1p"
+        ver_info_text = "✨ Update 1.0.2 (25/12/2024): Hekate v6.4.2 | Atmosphere 1.10.1 | Sigpatches v1.10.1p"
         lbl_version_info = tk.Label(left_info, text=ver_info_text,
                                     font=("Segoe UI", 9, "bold"), bg=COLOR_BG, fg=COLOR_SUCCESS, justify="left")
         lbl_version_info.pack(side="top", anchor="w", pady=(5, 0))
