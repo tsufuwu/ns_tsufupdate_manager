@@ -4,7 +4,7 @@ A lightweight Python-based downloader tool.
 
 ## 📌 Author
 Project: Switch tsufupdate manager
-Author: Tsufu/ Phú Tràn Trung Lê
+Author: Tsufu/ Phu Tran Trung Le
 Year: 2025
 License: MIT
 
