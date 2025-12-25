@@ -250,7 +250,47 @@ DATA_VI = {
 }
 
 DATA_EN = {
-     "🚑 QUICK FIX (Common Issues)": [
+    "🔥 HACK FILES & PC TOOLS": [
+        {"name": "My Pack AIO Custom", "desc": "Customized Switch Hack Toolkit (AIO). Includes Atmosphere, Hekate, and essential sysmods for immediate use. Check version in green text above.", 
+        "urls": {"Step 1. Download file": "ACTION_MY_PACK_WARN", "Step 2. Select ZIP to auto-copy": "ACTION_PICK_ZIP"}}, 
+        {"name": "Sigpatches (For pirated games)", "desc": "Signature Patches: Most important for pirated games. Bypasses Nintendo signature checks, allowing unsigned NSP/XCI installation.", "urls": {"Step 1. Download file": "https://gbatemp.net/attachments/hekate-ams-package3-sigpatches-1-10-1p-cfw-21-1-0_v0-zip.544098/", "Step 2. Select ZIP to auto-copy": "ACTION_PICK_ZIP"}},
+        {"name": "Hekate (Bootloader)", "desc": "Multi-purpose bootloader. Used for Backup/Restore NAND, creating EmuNAND, partitioning SD card, and booting into CFW.", "urls": {"Auto Install": "https://github.com/CTCaer/hekate/releases/download/v6.4.2/hekate_ctcaer_6.4.2_Nyx_1.8.2.zip"}},
+        {"name": "Atmosphere (CFW)", "desc": "Most popular Custom Firmware for Switch. Core platform for Homebrew, Mods, and pirated games.", "urls": {"Auto Install (Latest)": "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.10.1/atmosphere-1.10.1-master-21c0f75a2+hbl-2.4.5+hbmenu-3.6.1.zip", "Atmosphere 1.9.5 (Read Note)": "ACTION_AMS_195" }},
+        {"name": "TegraRcmGUI (PC Installer)", "desc": "Windows PC software. Used to inject Payload into Switch when in RCM mode (black screen).", "urls": {"Auto Install (PC)": "ACTION_RUN_PC|https://github.com/eliboa/TegraRcmGUI/releases/download/2.6/TegraRcmGUI_v2.6_Installer.msi"}},
+    ],
+    "🛠️ USEFUL SYSMODS (Restart Required)": [
+        {"name": "Sys-patch", "desc": "Auto-patches system modules on boot (fs, ldr, es). Helps games run stably if Sigpatches are outdated.", "urls": {"Step 1. Download file": "https://gbatemp.net/download/sys-patch-sysmodule.39471/download", "Step 2. Select ZIP to auto-copy": "ACTION_PICK_ZIP"}},
+        {"name": "Tesla Menu (Overlay Menu)", "desc": "Overlay Menu. Toggle cheats, view system info, overclock... while in-game using combo (L + Dpad Down + R3).", "urls": {"Auto Install (Combo)": "TESLA_ACTION"}},
+        {"name": "Ultrahand (Powerful Overlay)", "desc": "Modern overlay manager similar to Tesla. Manages plugins like music, cheats, fps... activate with (ZL+ZR+DDOWN).", "urls": {"Auto Install (Combo)": "ULTRAHAND_ACTION"}},
+        {"name": "Edizon Overlay (Game Cheats)", "desc": "Cheat menu overlay. Search values, toggle cheats, infinite money instantly without exiting game.", "urls": {"Auto Install": "https://github.com/proferabg/EdiZon-Overlay/releases/download/v1.0.14/ovlEdiZon.ovl", "Guide": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/su-dung-cheat#cach-3-dung-edizon-overlay"}},
+        {"name": "Status Monitor (FPS/Battery/Temp)", "desc": "Real-time hardware monitor. Shows FPS, CPU/GPU temp, RAM speed, Battery %... on screen corner.", "urls": {"Auto Install": "https://github.com/masagrator/Status-Monitor-Overlay/releases/download/1.3.2/Status-Monitor-Overlay.zip"}},
+        {"name": "emuiibo (Amiibo Emulation)", "desc": "Virtual Amiibo emulator. Get in-game rewards (Zelda, Splatoon) without real figures. Use with Tesla Menu.", "urls": {"Auto Install": "https://github.com/XorTroll/emuiibo/releases/download/1.1.2/emuiibo.zip"}},
+        {"name": "SYS-CLK (Overclock)", "desc": "Safe Overclock/Underclock tool. Improves performance for heavy games (fps boost) or saves battery for light games.", "urls": {"Auto Install": "https://github.com/retronx-team/sys-clk/releases/download/2.0.1/sys-clk-2.0.1-21fix.zip"}},
+        {"name": "SysDVR (Stream via USB)", "desc": "Stream Audio/Video from Switch to PC via USB/Wifi. Record/Stream games without expensive Capture Card.", "urls": {"1. Switch App": "https://github.com/exelix11/SysDVR/releases/download/v6.2.2/SysDVR.zip", "2. PC Client (7z)": "ACTION_SAVE_PC|https://github.com/exelix11/SysDVR/releases/download/v6.2.2/SysDVR-Client-Windows-x64-with-framework.7z"}},
+        {"name": "Mission Control", "desc": "Connect Bluetooth controllers from other consoles (PS4, PS5, Xbox One, Wii U Pro...) to Switch without USB Receiver.", "urls": {"Auto Install": "https://github.com/ndeadly/MissionControl/releases/download/v0.14.1/MissionControl-0.14.1-master-141b3aca.zip"}},
+        {"name": "Sys-con (USB Controllers)", "desc": "Connect wired 3rd party controllers (Xbox 360, DualShock 3...) to Switch Dock.", "urls": {"Auto Install": "https://github.com/o0Zz/sys-con/releases/download/1.6.1/sys-con-1.6.1.zip"}},
+    ],
+    "🎮 HOMEBREW (Apps)": [
+        {"name": "HB App Store", "desc": "Online Homebrew Store. Search, download, and update hundreds of utility apps and homebrew games directly on Switch.", "urls": {"Auto Install": "https://github.com/fortheusers/hb-appstore/releases/download/v2.3.2/appstore.nro"}},
+        {"name": "AIO Switch Updater", "desc": "All-in-one updater on Switch. Update Atmosphere, Firmware, Cheats... via Wifi without PC.", "urls": {"Auto Install": "https://github.com/HamletDuFromage/aio-switch-updater/releases/download/2.23.3/aio-switch-updater.zip"}},
+        {"name": "Edizon (Cheat Manager)", "desc": "Powerful Save game and Cheat code manager. Backup saves to SD or activate cheat codes.", "urls": {"Auto Install": "https://github.com/WerWolv/EdiZon/releases/download/v3.1.0/EdiZon.nro"}},
+        {"name": "Breeze (Cheat)", "desc": "Advanced Cheat tool (Edizon successor). Supports complex memory search for creating own cheats.", "urls": {"Auto Install": "https://github.com/tomvita/Breeze-Beta/releases/download/beta99r/Breeze.zip"}},
+        {"name": "Retroarch (Emulator)", "desc": "All-in-one emulator. Play NES, SNES, GBA, PS1, N64, Arcade... games on Switch.", "urls": {"Web Access": "https://buildbot.libretro.com/nightly/nintendo/switch/libnx/"}},
+        {"name": "pEmu (Emulator)", "desc": "Collection of optimized emulators (pFBA, pSNES...) for Switch by Cpasjuste. Great UI and performance.", "urls": {"Web Access": "https://github.com/Cpasjuste/pemu/releases/latest"}},
+        {"name": "DBI (File Manager + Installer)", "desc": "Ultimate tool for Switch. Fast USB Game Install (MTP), clean junk files, manage SD files with intuitive UI.", "urls": {"Auto Install": "https://github.com/rashevskyv/dbi/releases/download/854ru/DBI.nro"}},
+        {"name": "Tinfoil (Game Shop)", "desc": "Famous FreeShop (needs host). Also a file manager and game installer with nice UI. (Not compatible with latest Atmosphere).", "urls": {"Web Access": "https://tinfoil.io/Download#download"}},
+        {"name": "Goldleaf", "desc": "Basic file manager and NSP/NSZ/XCI installer. Open Source. Browse SD files and install via USB (with Quark).", "urls": {"Auto Install": "https://github.com/XorTroll/Goldleaf/releases/download/1.2.0/Goldleaf.nro"}},
+        {"name": "Linkalho (Offline Link)", "desc": "Links fake Nintendo Account (Offline). Required for games needing Nintendo Account if banned or offline.", "urls": {"Step 1. Download file": "https://dlhb.gamebrew.org/switchhomebrews/linkalhonx.7z", "Step 2. Select ZIP to auto-copy": "ACTION_LINKALHO_NESTED"}},
+        {"name": "Combo: Theme Installer + Themezer", "desc": "Installs both: NXThemes Installer (Manage/Install themes) and Themezer-NX (Download themes online).", "urls": {"Theme installer + Themezer": "THEME_COMBO_ACTION", "🌐 Open Download Page": "https://github.com/exelix11/SwitchThemeInjector/releases"}},
+        {"name": "Battery Desync Fix", "desc": "Tool to calibrate battery percentage when it shows incorrect values.", "urls": {"Auto Install": "https://github.com/CTCaer/battery_desync_fix_nx/releases/download/1.5.1/battery_desync_fix_v1.5.1.nro", "📖 Guide": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap/hieu-chuan-pin-ao"}},
+    ],
+    "⚙️ MISC (Firmware/Cheat/Save)": [
+        {"name": "Firmware (Upgrade/Downgrade)", "desc": "Original Nintendo Switch OS files. Required when updating system using Daybreak.", "urls": {"Download Link 1": "https://darthsternie.net/switch-firmwares/", "Download Link 2": "https://github.com/THZoria/NX_Firmware/releases", "Update Guide": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/cap-nhat-firmware-cho-emunand"}},
+        {"name": "Game Cheats (AIO)", "desc": "Community cheat database. Download to update latest cheats for Edizon/Breeze.", "urls": {"GBAtemp": "https://gbatemp.net/threads/cheat-codes-ams-and-sx-os-add-and-request.520293/", "CheatSlips": "https://www.cheatslips.com/", "Guide": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/su-dung-cheat"}},
+        {"name": "Save Game (Source)", "desc": "Save game repositories shared by community. Useful for New Game+ or lost saves.", "urls": {"GBAtemp Save": "https://gbatemp.net/download/categories/game-saves.1668/", "TheTechGame": "https://www.thetechgame.com/Downloads/cid=135/nintendo-switch-game-saves.html", "Guide": "https://nsw.gitbook.io/guide/huong-dan-nang-cao/sao-luu-va-phuc-hoi-save-game"}},
+        {"name": "Game Translation (Vietnamese)", "desc": "Collection of Vietnamese Patches for Switch games. Download and install to correct folder (usually atmosphere/contents).", "urls": {"Reference Link": "https://docs.google.com/spreadsheets/d/1k_8w_Eb7M6_3q1-FrtY0gYdrCokr3IGxuk-oj_u-zbw/preview"}},
+    ],
+    "🚑 QUICK FIX (Common Issues)": [
         {"name": "HARD RESET (WIPE & REINSTALL)", "desc": "Use when soft fixes fail. Wipes SD Card (keeps emuMMC) and reinstalls My Pack.", "urls": {"☢️ RUN RESET": "ACTION_FIX_HARD_RESET"}},
         {"name": "Reinstall My Pack (Recommended)", "desc": "Best way to fix severe errors. System will guide you to download the standard hack pack to reinstall.", "urls": {"🛠️ Run Fix": "ACTION_FIX_REINSTALL_PACK"}},
         {"name": "Remove Themes (Fix Black Screen)", "desc": "Delete theme folder (0100000000001000). Use when theme causes boot failure or black screen.", "urls": {"🛠️ Run Fix": "ACTION_FIX_THEMES"}},
@@ -258,14 +298,16 @@ DATA_EN = {
         {"name": "WIPE Contents Folder (Extreme)", "desc": "WARNING: Delete entire atmosphere/contents folder. Will lose all Sysmods, Mods, Translations, and Cheats. Use for severe crashes.", "urls": {"🔥 Wipe & Reset": "ACTION_FIX_DELETE_ALL_CONTENTS"}},
         {"name": "Remove MacOS Junk (Fix Archive Bit)", "desc": "Scan and delete MacOS junk files (._file, .DS_Store). These often cause Hekate config errors.", "urls": {"🛠️ Run Fix": "ACTION_FIX_MAC_JUNK"}},
         {"name": "Delete All Cheats (Fix Game Crash)", "desc": "Delete all cheat files in contents. Use when game crashes immediately due to old cheat conflicts.", "urls": {"🛠️ Run Fix": "ACTION_FIX_CHEATS"}},
-        {"name": "Other Errors (Source: Community)", "desc": "Lookup other common errors and detailed fixes on Community Wiki.", "urls": {"🌍 View Guide": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap"}}
+        {"name": "Other Errors (Source: Community)", "desc": "Lookup other common errors and detailed fixes on Community Wiki.\n(Note: This website is in Vietnamese only. Please use Google Translate or AI to translate)", "urls": {"🌍 View Guide": "https://nsw.gitbook.io/guide/cac-loi-thuong-gap"}}
+    ],
+    "📚 GUIDES (Source: Nintendo Switch Community)": [
+        {"name": "Basic Guide", "desc": "Essential knowledge: Distinguish Switch models, hack terminology, basic usage.\n(Note: This website is in Vietnamese only. Please use Google Translate or AI to translate)", "urls": {"🌍 Web Access": "https://nsw.gitbook.io/guide/huong-dan-can-ban/"}},
+        {"name": "Advanced Guide", "desc": "In-depth articles: Create EmuMMC, Incognito, Partition SD, Backup Nand...\n(Note: This website is in Vietnamese only. Please use Google Translate or AI to translate)", "urls": {"🌍 Web Access": "https://nsw.gitbook.io/guide/huong-dan-nang-cao"}}
+    ],
+    "👾 GAME DOWNLOAD SOURCES": [
+        {"name": "Switch Game Website", "desc": "Rich Switch game library, frequently updated.", "urls": {"Reference Link": "https://rebrand.ly/tsufurom"}}
     ]
 }
-
-# FILL MISSING EN DATA WITH VI DATA
-for k, v in DATA_VI.items():
-    if k not in DATA_EN and k != "🚑 FIX LỖI NHANH (Sự cố thường gặp)":
-        DATA_EN[k] = v
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -593,8 +635,8 @@ class SwitchToolApp:
         lbl_credit_2 = tk.Label(left_info, text=text_db["credit2"],
                                 font=("Segoe UI", 9, "italic"), bg=COLOR_BG, fg="#dddddd", justify="left")
         lbl_credit_2.pack(side="top", anchor="w", pady=(2, 0))
-        # --- THÊM MỚI: HIỂN THỊ THÔNG TIN PHIÊN BẢN ---
-        ver_info_text = f"✨ Update {APP_VERSION} (25/12/2024): Hekate v6.4.2 | Atmosphere 1.10.1 | Sigpatches v1.10.1p"
+       
+        ver_info_text = f"✨ Update {APP_VERSION} (25/12/2025): Hekate v6.4.2 | Atmosphere 1.10.1 | Sigpatches v1.10.1p"
         lbl_version_info = tk.Label(left_info, text=ver_info_text,
                                     font=("Segoe UI", 9, "bold"), bg=COLOR_BG, fg=COLOR_SUCCESS, justify="left")
         lbl_version_info.pack(side="top", anchor="w", pady=(5, 0))

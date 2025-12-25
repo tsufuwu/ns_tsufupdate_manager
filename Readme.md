@@ -1,10 +1,10 @@
-# Tsufutube Downloader
+# Switch Tsufupdate Manager
 
 A lightweight Python-based downloader tool.
 
 ## 📌 Author
 Project: Switch tsufupdate manager
-Author: Tsufu/ Phú Tràn Trung Lê
+Author: Tsufu/ Phu Tran Trung Le
 Year: 2025
 License: MIT
 
@@ -30,7 +30,9 @@ If you redistribute this software (in source or binary form), you are required t
 Removing or altering author information is considered a violation of the license.
 
 ## 🛠 Usage
-(Describe how to run your tool here)
+You can simply download the .exe file from the Releases section and run it. If you encounter the 'Windows protected your PC' blue screen, just click More info and then Run anyway.
+
+Alternatively, you can download the source code and run the build.cmd file to build the application. The .exe file will be located in the dist folder.
 
 ## 💡 Disclaimer
 This software is provided "as is", without warranty of any kind.
