@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Switch Tsufupdate Manager
+=======
+
+>>>>>>> 8766891486fa294e53a8f4cde329a3dfe1427cd5
 
 A lightweight Python-based downloader tool.
 
