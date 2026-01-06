@@ -15,6 +15,7 @@ import ftplib
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 from urllib.parse import urlparse, unquote
 from PIL import Image, ImageTk, ImageSequence
+import io
 
 # --- App Configuration ---
 try:
@@ -31,7 +32,7 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-APP_VERSION = "1.0.3"
+APP_VERSION = "1.0.4"
 GITHUB_REPO = "tsufuwu/ns_tsufupdate_manager" 
 
 # --- UI Colors ---
@@ -59,6 +60,42 @@ FONT_NORMAL = ("Segoe UI", 10)
 FONT_SMALL = ("Segoe UI", 9)
 
 # --- UI Dictionary ---
+# --- NỘI DUNG HƯỚNG DẪN SỬ DỤNG (THÊM MỚI) ---
+MANUAL_VI_CONTENT = """*** HƯỚNG DẪN SỬ DỤNG ***
+
+1. CHUẨN BỊ KẾT NỐI:
+   - Cách tốt nhất: Cắm thẻ nhớ vào máy tính qua đầu đọc thẻ.
+   - Cách dùng dây USB: Kết nối Switch với PC, mở Hekate > Tools > USB Tools > SD Card.
+   - Lưu ý về DBI (MTP): Chỉ dùng DBI để cài game hoặc chép file nhẹ. KHÔNG dùng DBI để chép file hack hệ thống (Atmosphere, Hekate) vì sẽ làm hỏng file.
+
+2. CÁCH TẢI VÀ CÀI ĐẶT:
+   - Chọn thư mục thẻ nhớ ở ô trên cùng (ví dụ ổ E:/, G:/).
+   - Nút XANH (⚡): Tự động tải và giải nén vào thẻ nhớ.
+   - Nút VÀNG (Fix/Web): Các công cụ sửa lỗi hoặc link tải thủ công.
+   - Nút MŨI TÊN (⬇️ Tải tất cả): Tải toàn bộ mục đó.
+
+3. SỬA LỖI (FIX):
+   - Nếu máy lỗi Tinfoil trên FW 21.1.0: Dùng tool "File fix tinfoil" trong mục đầu tiên.
+   - Nếu máy màn hình đen: Dùng tính năng "Gỡ bỏ Themes" hoặc "Xóa sysmodule" trong mục FIX LỖI NHANH.
+"""
+
+MANUAL_EN_CONTENT = """*** USER MANUAL ***
+
+1. PREPARATION:
+   - Best way: Insert SD card into PC via Card Reader.
+   - USB Method: Connect Switch to PC, open Hekate > Tools > USB Tools > SD Card.
+   - About DBI (MTP): Use DBI only for installing games or small files. DO NOT use DBI for System Hack files (Atmosphere) as it corrupts them.
+
+2. HOW TO INSTALL:
+   - Select your SD Card drive at the top (e.g., E:/, G:/).
+   - BLUE Button (⚡): Auto download & extract to SD.
+   - GOLD Button (Fix/Web): Fix tools or manual links.
+   - ARROW Button (⬇️ Download All): Download everything in that category.
+
+3. TROUBLESHOOTING:
+   - Tinfoil crash on FW 21.1.0: Use "Fix Tinfoil" tool in the first category.
+   - Black Screen: Use "Remove Themes" or "Remove Sysmodules" in QUICK FIX category.
+"""
 UI_TEXT = {
     "VI": {
         "title": "SWITCH TSUFUPDATE MANAGER",
@@ -228,7 +265,7 @@ DATA_VI = {
         {"name": "Hekate (Bootloader)", "desc": "Trình khởi động đa năng. Dùng để Backup/Restore NAND (tránh brick máy), tạo Emunand (hệ điều hành ảo), phân vùng thẻ nhớ và khởi động vào CFW.", "urls": {"Tự động cài đặt": "https://github.com/CTCaer/hekate/releases/download/v6.4.2/hekate_ctcaer_6.4.2_Nyx_1.8.2.zip"}},
         {"name": "Atmosphere (CFW)", "desc": "Hệ điều hành tùy chỉnh (Custom Firmware) phổ biến nhất cho Switch. Đây là nền tảng cốt lõi để chạy các ứng dụng Homebrew, Mod, và game lậu.", "urls": {"Tự động cài đặt (Mới nhất)": "https://github.com/Atmosphere-NX/Atmosphere/releases/download/1.10.1/atmosphere-1.10.1-master-21c0f75a2+hbl-2.4.5+hbmenu-3.6.1.zip", "Atmosphere 1.9.5 (đọc lưu ý))": "ACTION_AMS_195" }},
         {"name": "TegraRcmGUI (Cài trên PC)", "desc": "Phần mềm chạy trên máy tính Windows. Dùng để 'kích hack' (gửi Payload) vào Switch khi máy đang ở chế độ RCM (màn hình đen).", "urls": {"Tự động cài đặt (PC)": "ACTION_RUN_PC|https://github.com/eliboa/TegraRcmGUI/releases/download/2.6/TegraRcmGUI_v2.6_Installer.msi"}},
-    ],
+        {"name": "File fix tinfoil&app cho Firmware >21.1.0", "desc": "Sửa lỗi không vào được Tinfoil trên FW 21.1.0 (Atmosphere 1.10.1). Tự động tải Kefir và fix package3.", "urls": {"🛠️ Tải & Cài Fix": "ACTION_FIX_TINFOIL_21"}},],
     "🛠️ SYSMOD HỮU ÍCH (Cần Restart)": [
         {"name": "Sys-patch", "desc": "Module tự động vá lỗi hệ thống khi khởi động (fs, ldr, es). Giúp game chạy ổn định hơn, sửa lỗi khi Sigpatches chưa cập nhật kịp.", "urls": {"Bước 1. Tải về file": "https://gbatemp.net/download/sys-patch-sysmodule.39471/download", "Bước 2. Chọn file nén để tự động chép.": "ACTION_PICK_ZIP"}},
         {"name": "Tesla Menu (Overlay Menu)", "desc": "Menu phủ màn hình (Overlay). Cho phép bật/tắt cheat, xem thông tin máy, ép xung... ngay khi đang chơi game bằng tổ hợp phím (L + Dpad Down + R3).", "urls": {"Tự động cài đặt (Combo)": "TESLA_ACTION"}},
@@ -1003,6 +1040,8 @@ del "%~f0"
                 cmd = self.install_ams_195_logic
             elif url == "THEME_COMBO_ACTION":
                 cmd = self.install_theme_combo
+            elif url == "ACTION_FIX_TINFOIL_21":
+                cmd = self.process_fix_tinfoil
             elif url.startswith("ACTION_SAVE_PC|"):
                 actual_url = url.split("|")[1]
                 cmd = lambda u=actual_url: self.download_pc_file_generic(u)
@@ -1237,6 +1276,95 @@ del "%~f0"
         if save_path:
             self.cancel_flag = False
             threading.Thread(target=self.download_task, args=("File PC", url), kwargs={'custom_save_path': save_path}, daemon=True).start()
+    # --- CÁC HÀM MỚI THÊM VÀO ---
+
+    def process_fix_tinfoil(self):
+        # 1. Yêu cầu chọn thẻ nhớ gốc
+        msg_ask = "Để fix lỗi Tinfoil FW 21.1.0, bạn cần chọn THƯ MỤC GỐC thẻ nhớ Switch.\n(Ví dụ: E:\\ hoặc G:\\)\n\nLưu ý: Tool sẽ chép đè file 'atmosphere/package3'. Bạn có muốn tiếp tục?"
+        if not messagebox.askyesno("Xác nhận", msg_ask):
+            return
+
+        sd_root = filedialog.askdirectory(title="Chọn thư mục gốc thẻ nhớ Switch")
+        if not sd_root: return
+
+        # Kiểm tra sơ bộ
+        if not os.path.exists(os.path.join(sd_root, "atmosphere")) and not os.path.exists(os.path.join(sd_root, "Nintendo")):
+            if not messagebox.askyesno("Cảnh báo", "Thư mục này có vẻ không phải thẻ nhớ Switch.\nBạn có chắc muốn tiếp tục cài đè file hệ thống không?"):
+                return
+
+        def worker():
+            try:
+                url = "https://github.com/rashevskyv/kefir/releases/download/792/kefir792.zip"
+                self.root.after(0, lambda: self.status_label.config(text="Đang tải bản Fix Kefir...", fg=COLOR_WARNING))
+                
+                # Tải về RAM
+                r = requests.get(url, stream=True)
+                z = zipfile.ZipFile(io.BytesIO(r.content))
+                
+                target_file = "atmosphere/package3"
+                
+                if target_file in z.namelist():
+                    dest_path = os.path.join(sd_root, "atmosphere", "package3")
+                    dest_dir = os.path.dirname(dest_path)
+                    
+                    if not os.path.exists(dest_dir): os.makedirs(dest_dir)
+                    
+                    # Giải nén và ghi đè
+                    with z.open(target_file) as source, open(dest_path, "wb") as target:
+                        shutil.copyfileobj(source, target)
+                        
+                    self.root.after(0, lambda: messagebox.showinfo("Thành công", "Đã fix xong!\nHãy rút thẻ nhớ và khởi động lại Switch để vào Tinfoil."))
+                    self.root.after(0, lambda: self.status_label.config(text="Fix Tinfoil thành công!", fg=COLOR_SUCCESS))
+                else:
+                    self.root.after(0, lambda: messagebox.showerror("Lỗi", "Không tìm thấy file package3 trong gói tải về."))
+
+            except Exception as e:
+                self.root.after(0, lambda: messagebox.showerror("Lỗi", f"Có lỗi xảy ra: {str(e)}"))
+                self.root.after(0, lambda: self.status_label.config(text="Lỗi Fix Tinfoil", fg="red"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def show_user_guide(self):
+        # Hàm hiển thị HDSD mới với nút chuyển ngôn ngữ
+        guide_win = tk.Toplevel(self.root)
+        guide_win.title("Hướng dẫn sử dụng / User Manual")
+        guide_win.geometry("700x600")
+        guide_win.configure(bg=COLOR_BG)
+
+        # Header Frame
+        header = tk.Frame(guide_win, bg=COLOR_BG)
+        header.pack(fill="x", pady=10, padx=10)
+
+        lbl_head = tk.Label(header, text="HƯỚNG DẪN SỬ DỤNG", font=FONT_HEADER, bg=COLOR_BG, fg=COLOR_GOLD)
+        lbl_head.pack(side="left")
+
+        # Nút đổi ngôn ngữ
+        def set_lang(lang):
+            text_area.config(state=tk.NORMAL)
+            text_area.delete("1.0", tk.END)
+            if lang == "VI":
+                text_area.insert(tk.END, MANUAL_VI_CONTENT)
+                lbl_head.config(text="HƯỚNG DẪN SỬ DỤNG")
+            else:
+                text_area.insert(tk.END, MANUAL_EN_CONTENT)
+                lbl_head.config(text="USER MANUAL")
+            text_area.config(state=tk.DISABLED)
+
+        btn_en = ttk.Button(header, text="🇬🇧 English", style="TButton", command=lambda: set_lang("EN"))
+        btn_en.pack(side="right", padx=5)
+        
+        btn_vi = ttk.Button(header, text="🇻🇳 Tiếng Việt", style="TButton", command=lambda: set_lang("VI"))
+        btn_vi.pack(side="right", padx=5)
+
+        # Nội dung text
+        text_area = scrolledtext.ScrolledText(guide_win, width=80, height=30, font=("Segoe UI", 10), bg=COLOR_CARD, fg="white", padx=10, pady=10, relief="flat")
+        text_area.pack(fill="both", expand=True, padx=10, pady=5)
+
+        # Mặc định load theo ngôn ngữ app
+        if self.lang_code == "VI":
+            set_lang("VI")
+        else:
+            set_lang("EN")
 
     def process_run_pc(self, url, name):
         if not messagebox.askyesno("Xác nhận cài đặt", f"Bạn có muốn tải và TỰ ĐỘNG CHẠY file cài đặt cho {name} không?"):
